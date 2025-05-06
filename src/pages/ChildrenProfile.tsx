@@ -1,19 +1,18 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
-import { useTask, Child } from '@/contexts/TaskContext';
+import { useTask } from '@/contexts/TaskContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Child as ChildIcon, Trash2, Star, Calendar } from 'lucide-react';
+import { Plus, Users, Trash2, Star, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import TaskCard from '@/components/TaskCard';
 
 const ChildrenProfile: React.FC = () => {
-  const { children, tasks, addChild, updateChild, deleteChild } = useTask();
+  const { childrenList, tasks, addChild, updateChild, deleteChild } = useTask();
   const { toast } = useToast();
   
   const [isAddingChild, setIsAddingChild] = useState(false);
@@ -123,9 +122,9 @@ const ChildrenProfile: React.FC = () => {
           </Dialog>
         </div>
         
-        {children.length === 0 ? (
+        {childrenList.length === 0 ? (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-            <ChildIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
             <h3 className="text-lg font-medium text-gray-700 mb-2">Nenhum filho cadastrado</h3>
             <p className="text-gray-500 mb-4">Adicione um filho para gerenciar tarefas infantis</p>
             <Button 
@@ -137,7 +136,7 @@ const ChildrenProfile: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
-            {children.map((child) => (
+            {childrenList.map((child) => (
               <Card key={child.id} className="shadow-md">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">

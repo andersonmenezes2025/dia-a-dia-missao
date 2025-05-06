@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Award, Calendar, User, Plus, BarChart3, LogOut, Child } from 'lucide-react';
+import { Home, Award, Calendar, User, Plus, BarChart3, LogOut, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -29,7 +28,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { icon: Home, label: 'Início', path: '/' },
     { icon: Plus, label: 'Nova Missão', path: '/criar-tarefa' },
     { icon: Calendar, label: 'Missões', path: '/missoes' },
-    { icon: Child, label: 'Filhos', path: '/filhos' },
+    { icon: Users, label: 'Filhos', path: '/filhos' },
     { icon: BarChart3, label: 'Relatórios', path: '/relatorios' },
     { icon: User, label: 'Perfil', path: '/perfil' },
   ];

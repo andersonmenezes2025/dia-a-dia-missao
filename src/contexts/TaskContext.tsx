@@ -30,7 +30,7 @@ export interface Child {
 
 interface TaskContextType {
   tasks: Task[];
-  children: Child[];
+  childrenList: Child[];  // Renomeado de "children" para "childrenList" para evitar conflito
   addTask: (task: Omit<Task, 'id' | 'userId' | 'createdAt' | 'completed'>) => void;
   updateTask: (id: string, task: Partial<Task>) => void;
   deleteTask: (id: string) => void;
@@ -54,7 +54,7 @@ export const useTask = () => {
 
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [children, setChildren] = useState<Child[]>([]);
+  const [childrenList, setChildrenList] = useState<Child[]>([]);  // Renomeado para evitar conflito
   const { currentUser } = useAuth();
 
   // Carregar tarefas do localStorage
@@ -75,11 +75,11 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (storedChildren) {
-        setChildren(JSON.parse(storedChildren));
+        setChildrenList(JSON.parse(storedChildren));  // Usado o nome atualizado
       }
     } else {
       setTasks([]);
-      setChildren([]);
+      setChildrenList([]);  // Usado o nome atualizado
     }
   }, [currentUser]);
 
@@ -93,9 +93,9 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Salvar crianças no localStorage quando mudar
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem(`missaoDoDia_children_${currentUser.id}`, JSON.stringify(children));
+      localStorage.setItem(`missaoDoDia_children_${currentUser.id}`, JSON.stringify(childrenList));  // Usado o nome atualizado
     }
-  }, [children, currentUser]);
+  }, [childrenList, currentUser]);  // Usado o nome atualizado
 
   const addTask = (task: Omit<Task, 'id' | 'userId' | 'createdAt' | 'completed'>) => {
     if (!currentUser) return;
@@ -144,7 +144,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Se a tarefa estiver atribuída a uma criança, atualizar os pontos da criança
     if (task.childAssigned && task.childId) {
-      setChildren(children.map(child => 
+      setChildrenList(childrenList.map(child =>  // Usado o nome atualizado
         child.id === task.childId 
           ? { ...child, points: child.points + task.points } 
           : child
@@ -161,17 +161,17 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userId: currentUser.id
     };
     
-    setChildren([...children, newChild]);
+    setChildrenList([...childrenList, newChild]);  // Usado o nome atualizado
   };
 
   const updateChild = (id: string, updatedFields: Partial<Child>) => {
-    setChildren(children.map(child => 
+    setChildrenList(childrenList.map(child =>  // Usado o nome atualizado
       child.id === id ? { ...child, ...updatedFields } : child
     ));
   };
 
   const deleteChild = (id: string) => {
-    setChildren(children.filter(child => child.id !== id));
+    setChildrenList(childrenList.filter(child => child.id !== id));  // Usado o nome atualizado
     
     // Remover atribuições de tarefas para esta criança
     setTasks(tasks.map(task => 
@@ -228,7 +228,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     tasks,
-    children,
+    childrenList,  // Usado o nome atualizado
     addTask,
     updateTask,
     deleteTask,
