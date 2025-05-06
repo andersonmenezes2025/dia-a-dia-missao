@@ -61,10 +61,10 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Coluna da esquerda - Calendário e Filtros */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100 animate-fade-in">
             <h2 className="text-lg font-semibold mb-4 flex items-center text-purple-800">
               <CalendarIcon className="mr-2 h-5 w-5 text-purple-600" /> Calendário
             </h2>
@@ -76,11 +76,12 @@ const Dashboard: React.FC = () => {
               classNames={{
                 day_selected: "bg-purple-600 text-white hover:bg-purple-600 hover:text-white focus:bg-purple-600 focus:text-white",
                 day_today: "bg-purple-100 text-purple-800",
+                day: "hover:bg-purple-50 focus:bg-purple-50"
               }}
             />
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+          <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100 animate-fade-in" style={{ animationDelay: "0.1s" }}>
             <h2 className="text-lg font-semibold mb-3 text-purple-800">Filtrar por Categoria</h2>
             <div className="flex flex-wrap gap-2">
               {categories.map((category) => (
@@ -98,44 +99,44 @@ const Dashboard: React.FC = () => {
           </div>
           
           {/* Resumo de Progresso */}
-          <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-            <h2 className="text-lg font-semibold mb-3 flex items-center text-purple-800">
+          <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <h2 className="text-lg font-semibold mb-4 flex items-center text-purple-800">
               <Award className="mr-2 h-5 w-5 text-purple-600" /> Seu Progresso
             </h2>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium">Nível</span>
+              <span className="text-sm font-medium text-gray-600">Nível</span>
               <span className="text-lg font-bold text-purple-600">{currentUser?.level}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4 overflow-hidden">
+            <div className="w-full bg-gray-100 rounded-full h-3 mb-4 overflow-hidden">
               <div 
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500" 
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 h-3 rounded-full transition-all duration-500" 
                 style={{ width: `${(currentUser?.points || 0) % 100}%` }}
               ></div>
             </div>
-            <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
+            <div className="flex items-center justify-between mb-5 text-sm text-gray-600">
               <span>Pontos</span>
               <span>{(currentUser?.points || 0) % 100}/100 para o próximo nível</span>
             </div>
             
             <div className="pt-3 border-t border-gray-100">
-              <h3 className="text-md font-semibold mb-3 flex items-center text-purple-800">
+              <h3 className="text-md font-semibold mb-4 flex items-center text-purple-800">
                 <Star className="mr-2 h-5 w-5 text-amber-500" /> Medalhas
               </h3>
               <div className="flex space-x-6 justify-center">
-                <div className="flex flex-col items-center">
-                  <div className="w-10 h-10 bg-amber-700 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
+                <div className="flex flex-col items-center group">
+                  <div className="w-10 h-10 bg-amber-700 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transform transition-transform group-hover:scale-110">
                     {currentUser?.medals?.bronze || 0}
                   </div>
                   <span className="text-xs mt-2 font-medium text-gray-600">Bronze</span>
                 </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
+                <div className="flex flex-col items-center group">
+                  <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transform transition-transform group-hover:scale-110">
                     {currentUser?.medals?.silver || 0}
                   </div>
                   <span className="text-xs mt-2 font-medium text-gray-600">Prata</span>
                 </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
+                <div className="flex flex-col items-center group">
+                  <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transform transition-transform group-hover:scale-110">
                     {currentUser?.medals?.gold || 0}
                   </div>
                   <span className="text-xs mt-2 font-medium text-gray-600">Ouro</span>
@@ -146,7 +147,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Coluna central - Lista de Tarefas */}
-        <div className="lg:col-span-1">
+        <div className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
           <div className="flex justify-between items-center mb-5">
             <h2 className="text-xl font-bold text-purple-800">Missões do Dia</h2>
             <Button 
@@ -159,12 +160,13 @@ const Dashboard: React.FC = () => {
           
           {filteredTasks.length > 0 ? (
             <div className="space-y-4">
-              {filteredTasks.map(task => (
-                <TaskCard 
-                  key={task.id} 
-                  task={task} 
-                  onEdit={() => navigate(`/editar-tarefa/${task.id}`)}
-                />
+              {filteredTasks.map((task, index) => (
+                <div key={task.id} className="animate-fade-in" style={{ animationDelay: `${0.1 * (index + 1)}s` }}>
+                  <TaskCard 
+                    task={task} 
+                    onEdit={() => navigate(`/editar-tarefa/${task.id}`)}
+                  />
+                </div>
               ))}
             </div>
           ) : (
@@ -185,12 +187,12 @@ const Dashboard: React.FC = () => {
         </div>
         
         {/* Coluna da direita - Pomodoro */}
-        <div className="lg:col-span-1">
+        <div className="animate-fade-in" style={{ animationDelay: "0.4s" }}>
           <div className="mb-5 flex items-center">
             <Clock className="h-5 w-5 mr-2 text-purple-600" />
             <h2 className="text-xl font-bold text-purple-800">Foco & Tempo</h2>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
             <PomodoroTimer />
           </div>
         </div>
