@@ -8,8 +8,15 @@ import PomodoroTimer from '@/components/PomodoroTimer';
 import MotivationalAlert from '@/components/MotivationalAlert';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Plus, Calendar as CalendarIcon, Award, Star, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const Dashboard: React.FC = () => {
   const { currentUser } = useAuth();
@@ -66,19 +73,44 @@ const Dashboard: React.FC = () => {
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100 animate-fade-in">
             <h2 className="text-lg font-semibold mb-4 flex items-center text-purple-800">
-              <CalendarIcon className="mr-2 h-5 w-5 text-purple-600" /> Calendário
+              <CalendarIcon className="mr-2 h-5 w-5 text-purple-600" /> Selecionar Data
             </h2>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              className="rounded-md border-0 shadow-none"
-              classNames={{
-                day_selected: "bg-purple-600 text-white hover:bg-purple-600 hover:text-white focus:bg-purple-600 focus:text-white",
-                day_today: "bg-purple-100 text-purple-800",
-                day: "hover:bg-purple-50 focus:bg-purple-50"
-              }}
-            />
+            
+            {/* Usando Popover para o calendário para melhor experiência mobile */}
+            <div className="flex flex-col space-y-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start text-left font-normal border-dashed border-purple-200 hover:border-purple-400"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    className="rounded-md border-0 shadow-none pointer-events-auto"
+                    classNames={{
+                      day_selected: "bg-purple-600 text-white hover:bg-purple-600 hover:text-white focus:bg-purple-600 focus:text-white",
+                      day_today: "bg-purple-100 text-purple-800",
+                      day: "hover:bg-purple-50 focus:bg-purple-50"
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              {/* Data selecionada para clareza */}
+              <div className="text-center py-2 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-md">
+                <p className="text-sm font-medium text-purple-800">
+                  {selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' }).charAt(0).toUpperCase() + 
+                   selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' }).slice(1)}
+                </p>
+              </div>
+            </div>
           </div>
           
           <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100 animate-fade-in" style={{ animationDelay: "0.1s" }}>
