@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -50,7 +49,7 @@ const formSchema = z.object({
 });
 
 const CreateTask: React.FC = () => {
-  const { addTask, children } = useTask();
+  const { addTask, childrenList } = useTask();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -283,7 +282,7 @@ const CreateTask: React.FC = () => {
                 )}
               />
               
-              {watchChildAssigned && children.length > 0 && (
+              {watchChildAssigned && childrenList.length > 0 && (
                 <FormField
                   control={form.control}
                   name="childId"
@@ -297,7 +296,7 @@ const CreateTask: React.FC = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {children.map(child => (
+                          {childrenList.map(child => (
                             <SelectItem key={child.id} value={child.id}>
                               {child.name} ({child.age} anos)
                             </SelectItem>
@@ -310,7 +309,7 @@ const CreateTask: React.FC = () => {
                 />
               )}
               
-              {watchChildAssigned && children.length === 0 && (
+              {watchChildAssigned && childrenList.length === 0 && (
                 <div className="text-sm text-yellow-600 bg-yellow-50 p-3 rounded-md border border-yellow-200">
                   Você não tem filhos cadastrados. Adicione um filho na seção de perfil de filhos primeiro.
                 </div>
