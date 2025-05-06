@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -88,7 +87,7 @@ const Dashboard: React.FC = () => {
                     {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 z-[100]" align="start">
                   <Calendar
                     mode="single"
                     selected={selectedDate}
@@ -204,7 +203,7 @@ const Dashboard: React.FC = () => {
           ) : (
             <div className="text-center py-10 px-4 border-2 border-dashed border-purple-200 rounded-xl bg-purple-50/50">
               <div className="mb-3 inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 text-purple-600">
-                <Calendar className="h-6 w-6" />
+                <CalendarIcon className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-medium text-purple-800">Não há missões para hoje</h3>
               <p className="text-gray-500 mt-2 mb-4">Adicione uma nova missão ou selecione outra data</p>
