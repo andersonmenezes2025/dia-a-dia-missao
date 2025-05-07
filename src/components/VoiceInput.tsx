@@ -26,35 +26,37 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription }) => {
     }
 
     // Initialize SpeechRecognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognitionRef.current = new SpeechRecognition();
-    
-    if (recognitionRef.current) {
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = 'pt-BR';
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognitionAPI) {
+      recognitionRef.current = new SpeechRecognitionAPI();
       
-      recognitionRef.current.onresult = (event) => {
-        const current = event.resultIndex;
-        const result = event.results[current];
+      if (recognitionRef.current) {
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'pt-BR';
         
-        const transcriptText = result[0].transcript;
-        setTranscript(transcriptText);
+        recognitionRef.current.onresult = (event) => {
+          const current = event.resultIndex;
+          const result = event.results[current];
+          
+          const transcriptText = result[0].transcript;
+          setTranscript(transcriptText);
+          
+          if (result.isFinal) {
+            onTranscription(transcriptText);
+          }
+        };
         
-        if (result.isFinal) {
-          onTranscription(transcriptText);
-        }
-      };
-      
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        setIsRecording(false);
-        toast({
-          variant: 'destructive',
-          title: 'Erro',
-          description: 'Erro ao reconhecer voz. Tente novamente.',
-        });
-      };
+        recognitionRef.current.onerror = (event) => {
+          console.error('Speech recognition error', event.error);
+          setIsRecording(false);
+          toast({
+            variant: 'destructive',
+            title: 'Erro',
+            description: 'Erro ao reconhecer voz. Tente novamente.',
+          });
+        };
+      }
     }
 
     return () => {
