@@ -32,9 +32,9 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription }) => {
     let SpeechRecognitionAPI: SpeechRecognitionConstructor | undefined;
     
     if (hasSpeechRecognition) {
-      SpeechRecognitionAPI = window.SpeechRecognition;
+      SpeechRecognitionAPI = window['SpeechRecognition' as keyof Window] as unknown as SpeechRecognitionConstructor;
     } else if (hasWebkitSpeechRecognition) {
-      SpeechRecognitionAPI = window.webkitSpeechRecognition;
+      SpeechRecognitionAPI = window['webkitSpeechRecognition' as keyof Window] as unknown as SpeechRecognitionConstructor;
     }
     
     if (SpeechRecognitionAPI) {
