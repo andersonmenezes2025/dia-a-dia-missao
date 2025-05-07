@@ -16,7 +16,10 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription }) => {
 
   useEffect(() => {
     // Check if browser supports SpeechRecognition
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    const hasSpeechRecognition = 'SpeechRecognition' in window;
+    const hasWebkitSpeechRecognition = 'webkitSpeechRecognition' in window;
+    
+    if (!hasSpeechRecognition && !hasWebkitSpeechRecognition) {
       toast({
         variant: 'destructive',
         title: 'Recurso não suportado',
@@ -26,7 +29,14 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription }) => {
     }
 
     // Initialize SpeechRecognition
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let SpeechRecognitionAPI: SpeechRecognitionConstructor | undefined;
+    
+    if (hasSpeechRecognition) {
+      SpeechRecognitionAPI = window.SpeechRecognition;
+    } else if (hasWebkitSpeechRecognition) {
+      SpeechRecognitionAPI = window.webkitSpeechRecognition;
+    }
+    
     if (SpeechRecognitionAPI) {
       recognitionRef.current = new SpeechRecognitionAPI();
       
