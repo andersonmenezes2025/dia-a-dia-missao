@@ -14,6 +14,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CreateTask = lazy(() => import("./pages/CreateTask"));
+const EditTask = lazy(() => import("./pages/EditTask"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ChildrenProfile = lazy(() => import("./pages/ChildrenProfile"));
 const Reports = lazy(() => import("./pages/Reports"));
@@ -37,6 +38,7 @@ const App = () => (
                 <Route path="/register" element={<Register />} />
                 <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
                 <Route path="/criar-tarefa" element={<PrivateRoute><CreateTask /></PrivateRoute>} />
+                <Route path="/editar-tarefa/:taskId" element={<PrivateRoute><EditTask /></PrivateRoute>} />
                 <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
                 <Route path="/filhos" element={<PrivateRoute><ChildrenProfile /></PrivateRoute>} />
                 <Route path="/relatorios" element={<PrivateRoute><Reports /></PrivateRoute>} />
