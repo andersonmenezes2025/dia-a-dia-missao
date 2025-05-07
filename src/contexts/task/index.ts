@@ -1,15 +1,15 @@
 
+import { TaskProvider } from './TaskProvider';
+import { useTask } from './useTask';
 import { 
-  TaskProvider, 
-  useTask, 
   Task, 
   Child, 
   MenstrualCycle,
   TaskCategory,
-  RecurrenceType,
+  RecurrenceType, 
   MenstrualPhase,
   TaskContextType 
-} from './task';
+} from './types';
 
 export { 
   TaskProvider, 
@@ -21,5 +21,5 @@ export {
   TaskCategory,
   RecurrenceType,
   MenstrualPhase,
-  TaskContextType 
+  TaskContextType
 };

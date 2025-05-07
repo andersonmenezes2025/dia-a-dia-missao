@@ -2,8 +2,8 @@
 import React from 'react';
 import { Check, Clock, Edit, Trash2, RepeatIcon, Music, AlarmClock, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Task } from '@/contexts/TaskContext';
-import { useTask } from '@/contexts/TaskContext';
+import { Task } from '@/contexts/task/types';
+import { useTask } from '@/contexts/task';
 import {
   Card,
   CardContent,
