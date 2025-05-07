@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Clock, Edit, Trash2 } from 'lucide-react';
+import { Check, Clock, Edit, Trash2, RepeatIcon, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Task } from '@/contexts/TaskContext';
 import { useTask } from '@/contexts/TaskContext';
@@ -50,6 +50,19 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit }) => {
         return '📝';
     }
   };
+  
+  const getRecurrenceText = (recurrence?: string) => {
+    switch (recurrence) {
+      case 'daily':
+        return 'Diária';
+      case 'weekly':
+        return 'Semanal';
+      case 'monthly':
+        return 'Mensal';
+      default:
+        return '';
+    }
+  };
 
   const formatDate = (date: Date | null) => {
     if (!date) return '';
@@ -73,16 +86,32 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit }) => {
         <p className={`text-sm text-gray-600 ${task.completed ? 'line-through' : ''}`}>
           {task.description}
         </p>
-        {task.dueDate && (
-          <div className="flex items-center mt-2 text-sm text-gray-500">
-            <Clock className="h-3 w-3 mr-1" />
-            <span>{formatDate(task.dueDate)}</span>
-          </div>
-        )}
-        {task.childAssigned && (
+        
+        <div className="flex flex-wrap gap-2 mt-2">
+          {task.dueDate && (
+            <div className="flex items-center text-sm text-gray-500">
+              <Clock className="h-3 w-3 mr-1" />
+              <span>{formatDate(task.dueDate)}</span>
+            </div>
+          )}
+          
+          {task.recurrence && task.recurrence !== 'none' && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
+              <RepeatIcon className="h-3 w-3" /> {getRecurrenceText(task.recurrence)}
+            </Badge>
+          )}
+          
+          {task.soundAlert && task.soundAlert !== 'none' && (
+            <Badge variant="outline" className="bg-purple-50 text-purple-700 flex items-center gap-1">
+              <Music className="h-3 w-3" /> Som
+            </Badge>
+          )}
+        </div>
+        
+        {task.childAssigned && task.childId && (
           <div className="mt-2">
             <Badge variant="outline" className="bg-purple-50">
-              👶 Tarefa para filho
+              👶 {Array.isArray(task.childId) ? `${task.childId.length} filho(s)` : 'Tarefa para filho'}
             </Badge>
           </div>
         )}

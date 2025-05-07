@@ -10,37 +10,22 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Award } from 'lucide-react';
+import { useTask } from '@/contexts/TaskContext';
 
 interface MotivationalAlertProps {
   show: boolean;
   onClose: () => void;
 }
 
-const motivationalQuotes = [
-  "Cada pequeno passo conta. Continue avançando!",
-  "Você está indo muito bem! Foque em uma tarefa de cada vez.",
-  "Divida e conquiste: quebre grandes tarefas em pequenas etapas.",
-  "Celebre cada vitória, não importa o tamanho dela.",
-  "A consistência é mais importante que a perfeição.",
-  "Respire fundo, você consegue lidar com isso!",
-  "Um pomodoro de cada vez, um passo de cada vez.",
-  "Você já superou muito até aqui, continue!",
-  "Organize o ambiente antes da tarefa para focar melhor.",
-  "Até o maior projeto começa com um único passo.",
-  "Se distrair é normal, retorne gentilmente ao foco.",
-  "Lembre-se de suas conquistas quando se sentir desafiado.",
-  "Sua atenção é seu super poder. Use-a com sabedoria."
-];
-
 const MotivationalAlert: React.FC<MotivationalAlertProps> = ({ show, onClose }) => {
   const [quote, setQuote] = useState<string>('');
+  const { getMotivationalPhrase } = useTask();
 
   useEffect(() => {
     if (show) {
-      const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
-      setQuote(motivationalQuotes[randomIndex]);
+      setQuote(getMotivationalPhrase());
     }
-  }, [show]);
+  }, [show, getMotivationalPhrase]);
 
   return (
     <AlertDialog open={show} onOpenChange={onClose}>

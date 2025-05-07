@@ -1,8 +1,8 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
 export type TaskCategory = 'trabalho' | 'casa' | 'filhos' | 'saude';
+export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly';
 
 export interface Task {
   id: string;
@@ -15,11 +15,13 @@ export interface Task {
   createdAt: Date;
   dueDate: Date | null;
   childAssigned: boolean;
-  childId?: string;
+  childId?: string | string[]; // Modified to support multiple children
   pomodoroSessions?: number;
+  recurrence?: RecurrenceType;
+  soundAlert?: string;
 }
 
-export interface Child {
+interface Child {
   id: string;
   userId: string;
   name: string;
@@ -40,7 +42,27 @@ interface TaskContextType {
   deleteChild: (id: string) => void;
   getTasksByDate: (date: Date) => Task[];
   getWeeklyProgressData: () => { day: string; completed: number; total: number }[];
+  getMotivationalPhrase: () => string;
 }
+
+// List of motivational phrases
+const motivationalPhrases = [
+  "Cada pequeno passo te aproxima do seu objetivo!",
+  "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
+  "Você é mais forte do que imagina. Continue avançando!",
+  "Sua persistência hoje constrói seu sucesso amanhã.",
+  "Acredite em você mesmo e tudo se torna possível.",
+  "O foco é sua maior ferramenta para vencer a procrastinação.",
+  "Transforme seus desafios em oportunidades de crescimento.",
+  "Não tenha medo de falhar, tenha medo de não tentar.",
+  "Sua capacidade de organização é seu superpoder!",
+  "Pequenas vitórias diárias constroem grandes conquistas.",
+  "A disciplina é a ponte entre objetivos e realizações.",
+  "Cada tarefa concluída é uma prova do seu potencial.",
+  "Sua dedicação de hoje será sua realização de amanhã.",
+  "Mantenha o foco no progresso, não na perfeição.",
+  "O tempo é seu recurso mais valioso, use-o com sabedoria."
+];
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
@@ -142,10 +164,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     
-    // Se a tarefa estiver atribuída a uma criança, atualizar os pontos da criança
+    // Se a tarefa estiver atribuída a uma ou mais crianças, atualizar os pontos das crianças
     if (task.childAssigned && task.childId) {
-      setChildrenList(childrenList.map(child =>  // Usado o nome atualizado
-        child.id === task.childId 
+      const childIds = Array.isArray(task.childId) ? task.childId : [task.childId];
+      
+      setChildrenList(childrenList.map(child => 
+        childIds.includes(child.id) 
           ? { ...child, points: child.points + task.points } 
           : child
       ));
@@ -192,6 +216,23 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const taskDate = new Date(task.dueDate);
       taskDate.setHours(0, 0, 0, 0);
       
+      // Check for recurring tasks
+      if (task.recurrence) {
+        const daysDiff = Math.floor((targetDate.getTime() - taskDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        switch(task.recurrence) {
+          case 'daily':
+            return daysDiff >= 0;
+          case 'weekly':
+            return daysDiff >= 0 && daysDiff % 7 === 0;
+          case 'monthly':
+            const taskDay = taskDate.getDate();
+            return targetDate.getDate() === taskDay && targetDate >= taskDate;
+          default:
+            return taskDate.getTime() === targetDate.getTime();
+        }
+      }
+      
       return taskDate.getTime() === targetDate.getTime();
     });
   };
@@ -226,6 +267,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return data;
   };
 
+  // Get a random motivational phrase
+  const getMotivationalPhrase = () => {
+    const randomIndex = Math.floor(Math.random() * motivationalPhrases.length);
+    return motivationalPhrases[randomIndex];
+  };
+
   const value = {
     tasks,
     childrenList,  // Usado o nome atualizado
@@ -237,7 +284,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateChild,
     deleteChild,
     getTasksByDate,
-    getWeeklyProgressData
+    getWeeklyProgressData,
+    getMotivationalPhrase
   };
 
   return (
