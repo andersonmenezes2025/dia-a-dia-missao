@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTask, TaskCategory } from '@/contexts/TaskContext';
+import { useTask, type TaskCategory } from '@/contexts/TaskContext';
 import TaskCard from '@/components/TaskCard';
 import PomodoroTimer from '@/components/PomodoroTimer';
 import MotivationalAlert from '@/components/MotivationalAlert';
@@ -19,12 +20,13 @@ import { ptBR } from 'date-fns/locale';
 
 const Dashboard: React.FC = () => {
   const { currentUser } = useAuth();
-  const { tasks, getTasksByDate } = useTask();
+  const { tasks, getTasksByDate, getUpcomingReminders } = useTask();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [filteredTasks, setFilteredTasks] = useState(tasks);
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory | 'todas'>('todas');
   const navigate = useNavigate();
   const [showMotivational, setShowMotivational] = useState(false);
+  const [reminderTask, setReminderTask] = useState<{title: string} | null>(null);
   
   // Filtrar tarefas por data selecionada e categoria
   useEffect(() => {
@@ -37,16 +39,47 @@ const Dashboard: React.FC = () => {
     }
   }, [selectedDate, selectedCategory, tasks, getTasksByDate]);
 
-  // Mostrar alerta motivacional a cada 25 minutos (simulação)
+  // Mostrar alerta motivacional a cada 3 minutos (para demo)
   useEffect(() => {
     const showMotivationalMessage = () => {
+      setReminderTask(null);
       setShowMotivational(true);
     };
     
-    // Em uma aplicação real, poderia ser baseado em eventos do usuário ou temporizadores reais
     const interval = setInterval(showMotivationalMessage, 3 * 60 * 1000); // A cada 3 minutos para demo
     
     return () => clearInterval(interval);
+  }, []);
+
+  // Verificar lembretes de tarefas a cada minuto
+  useEffect(() => {
+    const checkReminders = () => {
+      const reminders = getUpcomingReminders();
+      
+      if (reminders.length > 0) {
+        const nextTask = reminders[0];
+        setReminderTask(nextTask);
+        setShowMotivational(true);
+      }
+    };
+    
+    // Verificar imediatamente ao carregar
+    checkReminders();
+    
+    // Configurar verificação periódica
+    const interval = setInterval(checkReminders, 60000);
+    
+    return () => clearInterval(interval);
+  }, [getUpcomingReminders]);
+
+  // Mostrar um alerta motivacional ao carregar a página (para fins de demonstração)
+  useEffect(() => {
+    // Breve atraso para garantir que a página tenha carregado completamente
+    const timer = setTimeout(() => {
+      setShowMotivational(true);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const categories: { value: TaskCategory | 'todas'; label: string; color: string }[] = [
@@ -233,6 +266,8 @@ const Dashboard: React.FC = () => {
       <MotivationalAlert 
         show={showMotivational} 
         onClose={() => setShowMotivational(false)} 
+        taskTitle={reminderTask?.title}
+        isReminder={!!reminderTask}
       />
     </Layout>
   );
