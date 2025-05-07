@@ -1,7 +1,10 @@
 
 import { 
   TaskProvider, 
-  useTask, 
+  useTask 
+} from './task';
+
+import type {
   Task, 
   Child, 
   MenstrualCycle,
@@ -13,8 +16,11 @@ import {
 
 export { 
   TaskProvider, 
-  useTask, 
-  // Types
+  useTask
+};
+
+// Re-export types using 'export type'
+export type { 
   Task, 
   Child, 
   MenstrualCycle,
