@@ -1,8 +1,10 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
 export type TaskCategory = 'trabalho' | 'casa' | 'filhos' | 'saude';
 export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly';
+export type MenstrualPhase = 'menstrual' | 'folicular' | 'ovulacao' | 'lutea' | 'tpm' | 'none';
 
 export interface Task {
   id: string;
@@ -14,6 +16,9 @@ export interface Task {
   completed: boolean;
   createdAt: Date;
   dueDate: Date | null;
+  startTime?: string;
+  endTime?: string;
+  reminder?: boolean;
   childAssigned: boolean;
   childId?: string | string[]; // Modified to support multiple children
   pomodoroSessions?: number;
@@ -30,9 +35,17 @@ interface Child {
   avatarColor: string;
 }
 
+interface MenstrualCycle {
+  currentPhase: MenstrualPhase;
+  cycleStart?: Date;
+  cycleLength?: number;
+  lastPeriod?: Date;
+}
+
 interface TaskContextType {
   tasks: Task[];
-  childrenList: Child[];  // Renomeado de "children" para "childrenList" para evitar conflito
+  childrenList: Child[]; 
+  menstrualCycle: MenstrualCycle;
   addTask: (task: Omit<Task, 'id' | 'userId' | 'createdAt' | 'completed'>) => void;
   updateTask: (id: string, task: Partial<Task>) => void;
   deleteTask: (id: string) => void;
@@ -43,6 +56,8 @@ interface TaskContextType {
   getTasksByDate: (date: Date) => Task[];
   getWeeklyProgressData: () => { day: string; completed: number; total: number }[];
   getMotivationalPhrase: () => string;
+  updateMenstrualCycle: (cycle: Partial<MenstrualCycle>) => void;
+  getUpcomingReminders: () => Task[];
 }
 
 // List of motivational phrases
@@ -61,7 +76,12 @@ const motivationalPhrases = [
   "Cada tarefa concluída é uma prova do seu potencial.",
   "Sua dedicação de hoje será sua realização de amanhã.",
   "Mantenha o foco no progresso, não na perfeição.",
-  "O tempo é seu recurso mais valioso, use-o com sabedoria."
+  "O tempo é seu recurso mais valioso, use-o com sabedoria.",
+  "Você é amado e valorizado por quem importa na sua vida.",
+  "Seu trabalho tem impacto, mesmo nos dias difíceis.",
+  "Sua família reconhece seu esforço e dedicação.",
+  "Cuide de si com o mesmo amor que dedica aos outros.",
+  "Momentos de descanso são tão importantes quanto os de produtividade."
 ];
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -76,7 +96,10 @@ export const useTask = () => {
 
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [childrenList, setChildrenList] = useState<Child[]>([]);  // Renomeado para evitar conflito
+  const [childrenList, setChildrenList] = useState<Child[]>([]);
+  const [menstrualCycle, setMenstrualCycle] = useState<MenstrualCycle>({
+    currentPhase: 'none'
+  });
   const { currentUser } = useAuth();
 
   // Carregar tarefas do localStorage
@@ -84,6 +107,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (currentUser) {
       const storedTasks = localStorage.getItem(`missaoDoDia_tasks_${currentUser.id}`);
       const storedChildren = localStorage.getItem(`missaoDoDia_children_${currentUser.id}`);
+      const storedMenstrualCycle = localStorage.getItem(`missaoDoDia_menstrualCycle_${currentUser.id}`);
       
       if (storedTasks) {
         const parsedTasks = JSON.parse(storedTasks);
@@ -97,11 +121,21 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (storedChildren) {
-        setChildrenList(JSON.parse(storedChildren));  // Usado o nome atualizado
+        setChildrenList(JSON.parse(storedChildren));
+      }
+      
+      if (storedMenstrualCycle) {
+        const parsedCycle = JSON.parse(storedMenstrualCycle);
+        setMenstrualCycle({
+          ...parsedCycle,
+          cycleStart: parsedCycle.cycleStart ? new Date(parsedCycle.cycleStart) : undefined,
+          lastPeriod: parsedCycle.lastPeriod ? new Date(parsedCycle.lastPeriod) : undefined
+        });
       }
     } else {
       setTasks([]);
-      setChildrenList([]);  // Usado o nome atualizado
+      setChildrenList([]);
+      setMenstrualCycle({ currentPhase: 'none' });
     }
   }, [currentUser]);
 
@@ -115,9 +149,49 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Salvar crianças no localStorage quando mudar
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem(`missaoDoDia_children_${currentUser.id}`, JSON.stringify(childrenList));  // Usado o nome atualizado
+      localStorage.setItem(`missaoDoDia_children_${currentUser.id}`, JSON.stringify(childrenList));
     }
-  }, [childrenList, currentUser]);  // Usado o nome atualizado
+  }, [childrenList, currentUser]);
+
+  // Salvar ciclo menstrual quando mudar
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`missaoDoDia_menstrualCycle_${currentUser.id}`, JSON.stringify(menstrualCycle));
+    }
+  }, [menstrualCycle, currentUser]);
+
+  // Checar por lembretes a cada minuto
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      const upcomingTasks = tasks.filter(task => {
+        if (!task.completed && task.dueDate && task.reminder && task.startTime) {
+          const taskDate = new Date(task.dueDate);
+          const [hours, minutes] = task.startTime.split(':').map(Number);
+          
+          taskDate.setHours(hours, minutes, 0, 0);
+          
+          // 15 minutos em milissegundos
+          const fifteenMinutes = 15 * 60 * 1000;
+          const timeDiff = taskDate.getTime() - now.getTime();
+          
+          // Retorna true se a tarefa estiver entre 14 e 16 minutos do agora
+          // Isso dá uma janela de 2 minutos para evitar múltiplos alertas
+          return timeDiff > 0 && timeDiff < fifteenMinutes && timeDiff > (fifteenMinutes - 2 * 60 * 1000);
+        }
+        return false;
+      });
+      
+      if (upcomingTasks.length > 0) {
+        // Poderiamos disparar um alerta aqui, mas vamos deixar para o componente de dashboard
+        console.log('Tarefas com lembretes próximos:', upcomingTasks);
+      }
+    };
+    
+    const intervalId = setInterval(checkReminders, 60000); // Checar a cada minuto
+    
+    return () => clearInterval(intervalId);
+  }, [tasks]);
 
   const addTask = (task: Omit<Task, 'id' | 'userId' | 'createdAt' | 'completed'>) => {
     if (!currentUser) return;
@@ -273,9 +347,35 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return motivationalPhrases[randomIndex];
   };
 
+  // Update menstrual cycle information
+  const updateMenstrualCycle = (cycle: Partial<MenstrualCycle>) => {
+    setMenstrualCycle(prev => ({ ...prev, ...cycle }));
+  };
+
+  // Get tasks with upcoming reminders
+  const getUpcomingReminders = () => {
+    const now = new Date();
+    return tasks.filter(task => {
+      if (!task.completed && task.dueDate && task.reminder && task.startTime) {
+        const taskDate = new Date(task.dueDate);
+        const [hours, minutes] = task.startTime.split(':').map(Number);
+        
+        taskDate.setHours(hours, minutes, 0, 0);
+        
+        // 15 minutos em milissegundos
+        const fifteenMinutes = 15 * 60 * 1000;
+        const timeDiff = taskDate.getTime() - now.getTime();
+        
+        return timeDiff > 0 && timeDiff < fifteenMinutes;
+      }
+      return false;
+    });
+  };
+
   const value = {
     tasks,
-    childrenList,  // Usado o nome atualizado
+    childrenList,
+    menstrualCycle,
     addTask,
     updateTask,
     deleteTask,
@@ -285,7 +385,9 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deleteChild,
     getTasksByDate,
     getWeeklyProgressData,
-    getMotivationalPhrase
+    getMotivationalPhrase,
+    updateMenstrualCycle,
+    getUpcomingReminders
   };
 
   return (

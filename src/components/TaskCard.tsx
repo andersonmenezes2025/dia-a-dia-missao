@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Clock, Edit, Trash2, RepeatIcon, Music } from 'lucide-react';
+import { Check, Clock, Edit, Trash2, RepeatIcon, Music, AlarmClock, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Task } from '@/contexts/TaskContext';
 import { useTask } from '@/contexts/TaskContext';
@@ -69,6 +69,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit }) => {
     return new Date(date).toLocaleDateString('pt-BR');
   };
 
+  const formatTime = (time?: string) => {
+    if (!time) return '';
+    return time;
+  };
+
   return (
     <Card className={`shadow-md transition-all duration-300 overflow-hidden ${task.completed ? 'opacity-70' : 'hover:shadow-lg'}`}>
       <CardHeader className="pb-2">
@@ -95,6 +100,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit }) => {
             </div>
           )}
           
+          {task.startTime && (
+            <div className="flex items-center text-sm text-gray-500">
+              <AlarmClock className="h-3 w-3 mr-1" />
+              <span>Início: {formatTime(task.startTime)}</span>
+            </div>
+          )}
+          
+          {task.endTime && (
+            <div className="flex items-center text-sm text-gray-500 ml-3">
+              <AlarmClock className="h-3 w-3 mr-1" />
+              <span>Término: {formatTime(task.endTime)}</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex flex-wrap gap-2 mt-2">
           {task.recurrence && task.recurrence !== 'none' && (
             <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
               <RepeatIcon className="h-3 w-3" /> {getRecurrenceText(task.recurrence)}
@@ -104,6 +125,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit }) => {
           {task.soundAlert && task.soundAlert !== 'none' && (
             <Badge variant="outline" className="bg-purple-50 text-purple-700 flex items-center gap-1">
               <Music className="h-3 w-3" /> Som
+            </Badge>
+          )}
+          
+          {task.reminder && (
+            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 flex items-center gap-1">
+              <BellRing className="h-3 w-3" /> Lembrete
             </Badge>
           )}
         </div>
