@@ -1,7 +1,7 @@
 
 import { ReactNode } from 'react';
 
-export type MenstrualPhase = 'menstruation' | 'follicular' | 'ovulation' | 'luteal' | 'none';
+export type MenstrualPhase = 'none' | 'menstrual' | 'folicular' | 'ovulacao' | 'lutea' | 'tpm';
 
 export type TaskCategory = 'trabalho' | 'casa' | 'filhos' | 'saude';
 
@@ -33,6 +33,7 @@ export interface Child {
   name: string;
   age: number;
   avatarUrl?: string;
+  avatarColor?: string;
   points: number;
   birthDate?: Date;
 }
