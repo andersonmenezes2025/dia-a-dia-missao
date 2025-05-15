@@ -8,7 +8,8 @@ import type {
   TaskCategory,
   RecurrenceType, 
   MenstrualPhase,
-  TaskContextType 
+  TaskContextType,
+  VoiceSettings 
 } from './types';
 
 export { 
@@ -24,5 +25,6 @@ export type {
   TaskCategory,
   RecurrenceType,
   MenstrualPhase,
-  TaskContextType
+  TaskContextType,
+  VoiceSettings
 };
