@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -8,15 +8,26 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Volume, VolumeX, Volume1, Volume2, BellRing } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTask } from '@/contexts/TaskContext';
 
 const VoiceReminderSettings = () => {
-  const [enabled, setEnabled] = useState(true);
-  const [volume, setVolume] = useState(80);
-  const [voiceType, setVoiceType] = useState<'female' | 'male'>('female');
+  const { voiceSettings, updateVoiceSettings } = useTask();
   const { toast } = useToast();
+  
+  const handleVoiceToggle = (enabled: boolean) => {
+    updateVoiceSettings({ enabled });
+  };
+  
+  const handleVolumeChange = (values: number[]) => {
+    updateVoiceSettings({ volume: values[0] });
+  };
+  
+  const handleVoiceTypeChange = (value: string) => {
+    updateVoiceSettings({ voiceType: value as 'female' | 'male' });
+  };
 
   const handleTestVoice = () => {
-    if (!enabled) {
+    if (!voiceSettings.enabled) {
       toast({
         title: "Lembretes por voz desativados",
         description: "Ative os lembretes por voz para testar."
@@ -29,7 +40,7 @@ const VoiceReminderSettings = () => {
     
     const utterance = new SpeechSynthesisUtterance(announcement);
     utterance.lang = 'pt-BR';
-    utterance.volume = volume / 100;
+    utterance.volume = voiceSettings.volume / 100;
     
     // Try to find an appropriate voice
     const voices = speechSynthesis.getVoices();
@@ -37,7 +48,7 @@ const VoiceReminderSettings = () => {
     
     if (brVoices.length > 0) {
       // Look for a voice matching the selected gender
-      const genderVoices = voiceType === 'female' 
+      const genderVoices = voiceSettings.voiceType === 'female' 
         ? brVoices.filter(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman'))
         : brVoices.filter(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('man'));
       
@@ -53,14 +64,14 @@ const VoiceReminderSettings = () => {
     
     toast({
       title: "Testando lembrete por voz",
-      description: `${voiceType === 'female' ? 'Voz feminina' : 'Voz masculina'} com volume ${volume}%`
+      description: `${voiceSettings.voiceType === 'female' ? 'Voz feminina' : 'Voz masculina'} com volume ${voiceSettings.volume}%`
     });
   };
 
   const getVolumeIcon = () => {
-    if (volume === 0 || !enabled) return <VolumeX className="h-4 w-4" />;
-    if (volume < 33) return <Volume className="h-4 w-4" />;
-    if (volume < 66) return <Volume1 className="h-4 w-4" />;
+    if (voiceSettings.volume === 0 || !voiceSettings.enabled) return <VolumeX className="h-4 w-4" />;
+    if (voiceSettings.volume < 33) return <Volume className="h-4 w-4" />;
+    if (voiceSettings.volume < 66) return <Volume1 className="h-4 w-4" />;
     return <Volume2 className="h-4 w-4" />;
   };
 
@@ -72,23 +83,23 @@ const VoiceReminderSettings = () => {
           Lembretes por Voz
         </h3>
         <Switch 
-          checked={enabled} 
-          onCheckedChange={setEnabled} 
+          checked={voiceSettings.enabled} 
+          onCheckedChange={handleVoiceToggle} 
         />
       </div>
 
-      <div className={enabled ? "space-y-4" : "space-y-4 opacity-50 pointer-events-none"}>
+      <div className={voiceSettings.enabled ? "space-y-4" : "space-y-4 opacity-50 pointer-events-none"}>
         <div className="space-y-2">
           <div className="flex justify-between">
             <Label>Volume</Label>
             <div className="flex items-center">
               {getVolumeIcon()}
-              <span className="ml-2 text-sm">{volume}%</span>
+              <span className="ml-2 text-sm">{voiceSettings.volume}%</span>
             </div>
           </div>
           <Slider
-            value={[volume]}
-            onValueChange={(values) => setVolume(values[0])}
+            value={[voiceSettings.volume]}
+            onValueChange={handleVolumeChange}
             max={100}
             step={1}
           />
@@ -97,8 +108,8 @@ const VoiceReminderSettings = () => {
         <div className="space-y-2">
           <Label>Tipo de Voz</Label>
           <RadioGroup 
-            value={voiceType} 
-            onValueChange={(value) => setVoiceType(value as 'female' | 'male')}
+            value={voiceSettings.voiceType} 
+            onValueChange={handleVoiceTypeChange}
             className="flex space-x-2"
           >
             <div className="flex items-center space-x-2">

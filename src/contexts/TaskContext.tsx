@@ -11,7 +11,8 @@ import type {
   TaskCategory,
   RecurrenceType,
   MenstrualPhase,
-  TaskContextType 
+  TaskContextType,
+  VoiceSettings 
 } from './task';
 
 export { 
@@ -27,5 +28,6 @@ export type {
   TaskCategory,
   RecurrenceType,
   MenstrualPhase,
-  TaskContextType 
+  TaskContextType,
+  VoiceSettings
 };

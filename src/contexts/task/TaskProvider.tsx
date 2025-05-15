@@ -1,11 +1,11 @@
-
 import React, { createContext, useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { 
   Task, 
   Child, 
   MenstrualCycle, 
-  TaskContextType 
+  TaskContextType,
+  VoiceSettings
 } from './types';
 import { getRandomMotivationalPhrase, shouldShowTaskOnDate, normalizeDate } from './utils';
 
@@ -17,7 +17,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [menstrualCycle, setMenstrualCycle] = useState<MenstrualCycle>({
     currentPhase: 'none'
   });
-  const [voiceSettings, setVoiceSettings] = useState({
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>({
     enabled: true,
     volume: 80,
     voiceType: 'female'
@@ -57,7 +57,14 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (storedVoiceSettings) {
-        setVoiceSettings(JSON.parse(storedVoiceSettings));
+        const parsed = JSON.parse(storedVoiceSettings);
+        // Ensure voiceType is either 'female' or 'male'
+        const voiceType = parsed.voiceType === 'male' ? 'male' : 'female';
+        setVoiceSettings({
+          enabled: Boolean(parsed.enabled),
+          volume: Number(parsed.volume) || 80,
+          voiceType
+        });
       }
     } else {
       setTasks([]);
@@ -303,8 +310,15 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   // Voice settings management
-  const updateVoiceSettings = (settings: Partial<typeof voiceSettings>) => {
-    setVoiceSettings(prev => ({ ...prev, ...settings }));
+  const updateVoiceSettings = (settings: Partial<VoiceSettings>) => {
+    setVoiceSettings(prev => {
+      // Ensure voiceType is either 'female' or 'male'
+      const newSettings = { ...prev, ...settings };
+      if (settings.voiceType && settings.voiceType !== 'female' && settings.voiceType !== 'male') {
+        newSettings.voiceType = 'female';
+      }
+      return newSettings;
+    });
   };
 
   // Medal requirements
@@ -344,7 +358,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // This could be expanded with additional functionality
   };
 
-  const value = {
+  const value: TaskContextType = {
     tasks,
     childrenList,
     menstrualCycle,

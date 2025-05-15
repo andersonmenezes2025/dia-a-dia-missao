@@ -56,7 +56,7 @@ export interface TaskContextType {
   tasks: Task[];
   childrenList: Child[];
   menstrualCycle: MenstrualCycle;
-  voiceSettings?: VoiceSettings;
+  voiceSettings: VoiceSettings;
   addTask: (task: Omit<Task, 'id' | 'userId' | 'createdAt' | 'completed'>) => void;
   updateTask: (id: string, updatedFields: Partial<Task>) => void;
   deleteTask: (id: string) => void;
@@ -68,8 +68,8 @@ export interface TaskContextType {
   getWeeklyProgressData: () => any[];
   getMotivationalPhrase: () => string;
   updateMenstrualCycle: (cycle: Partial<MenstrualCycle>) => void;
-  updateVoiceSettings?: (settings: Partial<VoiceSettings>) => void;
-  getMedalRequirements?: (medalType: 'bronze' | 'silver' | 'gold') => number;
+  updateVoiceSettings: (settings: Partial<VoiceSettings>) => void;
+  getMedalRequirements: (medalType: 'bronze' | 'silver' | 'gold') => number;
   getUpcomingReminders: () => Task[];
-  startPomodoroForTask?: (taskId: string) => void;
+  startPomodoroForTask: (taskId: string) => void;
 }
