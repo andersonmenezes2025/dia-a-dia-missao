@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,7 +14,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  Pills,
+  Pill,
   CalendarClock, 
   FileText, 
   AlertCircle, 
@@ -201,7 +200,8 @@ const HealthInfo: React.FC = () => {
   };
   
   // Check if user is female to show menstrual cycle section
-  const showMenstrualCycle = currentUser?.gender === 'female';
+  // Safely check if gender exists before comparing
+  const showMenstrualCycle = currentUser?.biologicalSex === 'female';
 
   return (
     <Layout>
@@ -213,7 +213,7 @@ const HealthInfo: React.FC = () => {
         <Tabs defaultValue="medications" className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
             <TabsTrigger value="medications" className="flex items-center gap-2">
-              <Pills className="h-4 w-4" />
+              <Pill className="h-4 w-4" />
               <span className="hidden md:inline">Medicamentos</span>
             </TabsTrigger>
             <TabsTrigger value="appointments" className="flex items-center gap-2">
@@ -241,7 +241,7 @@ const HealthInfo: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Pills className="h-5 w-5 text-purple-500" />
+                  <Pill className="h-5 w-5 text-purple-500" />
                   Adicionar Medicamento
                 </CardTitle>
               </CardHeader>
@@ -338,7 +338,7 @@ const HealthInfo: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-10 bg-gray-50 rounded-lg">
-                <Pills className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                <Pill className="h-12 w-12 mx-auto text-gray-400 mb-3" />
                 <h3 className="text-lg font-medium text-gray-700 mb-2">Nenhum medicamento cadastrado</h3>
                 <p className="text-gray-500">Adicione seus medicamentos para receber lembretes</p>
               </div>

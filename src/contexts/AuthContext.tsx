@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
 interface User {
@@ -12,6 +11,26 @@ interface User {
     silver: number;
     gold: number;
   };
+  age?: number;
+  gender?: 'male' | 'female' | 'other';
+  biologicalSex?: 'male' | 'female';
+  preferences?: {
+    darkMode: boolean;
+    highContrast: boolean;
+    largeText: boolean;
+  };
+}
+
+interface UserProfileUpdate {
+  name?: string;
+  age?: number;
+  gender?: 'male' | 'female' | 'other';
+  biologicalSex?: 'male' | 'female';
+  preferences?: {
+    darkMode: boolean;
+    highContrast: boolean;
+    largeText: boolean;
+  };
 }
 
 interface AuthContextType {
@@ -22,6 +41,7 @@ interface AuthContextType {
   logout: () => void;
   updateUserPoints: (points: number) => void;
   addMedal: (type: 'bronze' | 'silver' | 'gold') => void;
+  updateUserProfile: (profileData: UserProfileUpdate) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -164,6 +184,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('missaoDoDiaUsers', JSON.stringify(updatedUsers));
   };
 
+  const updateUserProfile = (profileData: UserProfileUpdate) => {
+    if (!currentUser) return;
+    
+    const updatedUser = {
+      ...currentUser,
+      ...profileData
+    };
+    
+    setCurrentUser(updatedUser);
+    
+    // Update in the "database"
+    const storedUsers = JSON.parse(localStorage.getItem('missaoDoDiaUsers') || '[]');
+    const updatedUsers = storedUsers.map((u: any) => 
+      u.id === currentUser.id ? { ...u, ...profileData } : u
+    );
+    
+    localStorage.setItem('missaoDoDiaUsers', JSON.stringify(updatedUsers));
+  };
+
   const value = {
     currentUser,
     loading,
@@ -171,7 +210,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
     logout,
     updateUserPoints,
-    addMedal
+    addMedal,
+    updateUserProfile
   };
 
   return (
