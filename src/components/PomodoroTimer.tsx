@@ -82,7 +82,7 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({ onComplete }) => {
         <h3 className="text-lg font-medium">Pomodoro Timer</h3>
         <div className="flex space-x-2">
           <Button
-            variant={mode === 'work' ? 'default' : 'outline'}
+            variant={mode === 'work' ? "default" : "outline"}
             size="sm"
             onClick={() => {
               if (mode !== 'work') switchMode();
@@ -91,7 +91,7 @@ const PomodoroTimer: React.FC<PomodoroTimerProps> = ({ onComplete }) => {
             Trabalho
           </Button>
           <Button
-            variant={mode === 'break' ? 'default' : 'outline'}
+            variant={mode === 'break' ? "default" : "outline"}
             size="sm"
             onClick={() => {
               if (mode !== 'break') switchMode();

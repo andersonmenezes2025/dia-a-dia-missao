@@ -1,136 +1,132 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import React from 'react';
+import { useTask } from '@/contexts/TaskContext';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { Volume, VolumeX, Volume1, Volume2, BellRing } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useTask } from '@/contexts/TaskContext';
 
-const VoiceReminderSettings = () => {
+const VoiceReminderSettings: React.FC = () => {
   const { voiceSettings, updateVoiceSettings } = useTask();
   const { toast } = useToast();
   
-  const handleVoiceToggle = (enabled: boolean) => {
-    updateVoiceSettings({ enabled });
-  };
-  
-  const handleVolumeChange = (values: number[]) => {
-    updateVoiceSettings({ volume: values[0] });
-  };
-  
-  const handleVoiceTypeChange = (value: string) => {
-    updateVoiceSettings({ voiceType: value as 'female' | 'male' });
-  };
-
-  const handleTestVoice = () => {
-    if (!voiceSettings.enabled) {
-      toast({
-        title: "Lembretes por voz desativados",
-        description: "Ative os lembretes por voz para testar."
-      });
-      return;
-    }
-
-    // Simulate voice announcement using Web Speech API
-    const announcement = "Atenção! A Missão começa em 15 minutos.";
-    
-    const utterance = new SpeechSynthesisUtterance(announcement);
-    utterance.lang = 'pt-BR';
-    utterance.volume = voiceSettings.volume / 100;
-    
-    // Try to find an appropriate voice
-    const voices = speechSynthesis.getVoices();
-    const brVoices = voices.filter(v => v.lang.includes('pt-BR'));
-    
-    if (brVoices.length > 0) {
-      // Look for a voice matching the selected gender
-      const genderVoices = voiceSettings.voiceType === 'female' 
-        ? brVoices.filter(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman'))
-        : brVoices.filter(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('man'));
-      
-      if (genderVoices.length > 0) {
-        utterance.voice = genderVoices[0];
-      } else {
-        // Fall back to any Portuguese voice
-        utterance.voice = brVoices[0];
-      }
-    }
-    
-    speechSynthesis.speak(utterance);
-    
+  const handleSaveSettings = () => {
     toast({
-      title: "Testando lembrete por voz",
-      description: `${voiceSettings.voiceType === 'female' ? 'Voz feminina' : 'Voz masculina'} com volume ${voiceSettings.volume}%`
+      title: "Configurações salvas",
+      description: "Suas preferências de lembrete por voz foram atualizadas.",
     });
   };
-
-  const getVolumeIcon = () => {
-    if (voiceSettings.volume === 0 || !voiceSettings.enabled) return <VolumeX className="h-4 w-4" />;
-    if (voiceSettings.volume < 33) return <Volume className="h-4 w-4" />;
-    if (voiceSettings.volume < 66) return <Volume1 className="h-4 w-4" />;
-    return <Volume2 className="h-4 w-4" />;
+  
+  // Test voice handler
+  const handleTestVoice = () => {
+    if ('speechSynthesis' in window && voiceSettings.enabled) {
+      const utterance = new SpeechSynthesisUtterance("Este é um teste de lembrete por voz. Suas missões serão anunciadas nesta voz.");
+      utterance.lang = 'pt-BR';
+      utterance.volume = voiceSettings.volume / 100;
+      
+      // Try to find an appropriate voice
+      const voices = speechSynthesis.getVoices();
+      const brVoices = voices.filter(v => v.lang.includes('pt-BR'));
+      
+      if (brVoices.length > 0) {
+        // Look for a voice matching the selected gender
+        const genderVoices = voiceSettings.voiceType === 'female' 
+          ? brVoices.filter(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman'))
+          : brVoices.filter(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('man'));
+        
+        if (genderVoices.length > 0) {
+          utterance.voice = genderVoices[0];
+        } else {
+          // Fall back to any Portuguese voice
+          utterance.voice = brVoices[0];
+        }
+      }
+      
+      speechSynthesis.speak(utterance);
+    } else {
+      toast({
+        title: "Lembretes por voz desativados",
+        description: "Ative os lembretes por voz para testar.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold flex items-center">
-          <BellRing className="h-5 w-5 mr-2 text-purple-500" />
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Bell className="h-5 w-5 text-purple-500" />
           Lembretes por Voz
-        </h3>
-        <Switch 
-          checked={voiceSettings.enabled} 
-          onCheckedChange={handleVoiceToggle} 
-        />
-      </div>
-
-      <div className={voiceSettings.enabled ? "space-y-4" : "space-y-4 opacity-50 pointer-events-none"}>
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <Label>Volume</Label>
-            <div className="flex items-center">
-              {getVolumeIcon()}
-              <span className="ml-2 text-sm">{voiceSettings.volume}%</span>
-            </div>
+        </CardTitle>
+        <CardDescription>
+          Configure como os lembretes de voz serão anunciados
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="voice-enabled">Ativar lembretes por voz</Label>
+            <p className="text-sm text-muted-foreground">
+              Receba anúncios falados para suas missões
+            </p>
           </div>
-          <Slider
-            value={[voiceSettings.volume]}
-            onValueChange={handleVolumeChange}
-            max={100}
-            step={1}
+          <Switch
+            id="voice-enabled"
+            checked={voiceSettings.enabled}
+            onCheckedChange={(checked) => updateVoiceSettings({ enabled: checked })}
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Tipo de Voz</Label>
+        <div className="space-y-3">
+          <Label htmlFor="voice-volume">Volume ({voiceSettings.volume}%)</Label>
+          <Slider
+            id="voice-volume"
+            disabled={!voiceSettings.enabled}
+            value={[voiceSettings.volume]}
+            min={0}
+            max={100}
+            step={5}
+            onValueChange={(value) => updateVoiceSettings({ volume: value[0] })}
+          />
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="voice-type">Tipo de Voz</Label>
           <RadioGroup 
-            value={voiceSettings.voiceType} 
-            onValueChange={handleVoiceTypeChange}
-            className="flex space-x-2"
+            id="voice-type" 
+            value={voiceSettings.voiceType}
+            onValueChange={(value) => updateVoiceSettings({ voiceType: value as 'female' | 'male' })}
+            disabled={!voiceSettings.enabled}
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="female" id="female" />
-              <Label htmlFor="female">Feminina</Label>
+              <RadioGroupItem value="female" id="voice-female" />
+              <Label htmlFor="voice-female">Feminina</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="male" id="male" />
-              <Label htmlFor="male">Masculina</Label>
+              <RadioGroupItem value="male" id="voice-male" />
+              <Label htmlFor="voice-male">Masculina</Label>
             </div>
           </RadioGroup>
         </div>
 
-        <Button 
-          variant="outline"
-          onClick={handleTestVoice}
-          className="w-full"
-        >
-          Testar Voz
-        </Button>
-      </div>
+        <div className="pt-4">
+          <Button 
+            variant="outline" 
+            onClick={handleTestVoice}
+            disabled={!voiceSettings.enabled}
+          >
+            Testar voz
+          </Button>
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button onClick={handleSaveSettings}>Salvar configurações</Button>
+      </CardFooter>
     </Card>
   );
 };

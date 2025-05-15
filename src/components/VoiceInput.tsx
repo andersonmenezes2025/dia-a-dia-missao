@@ -1,133 +1,103 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface VoiceInputProps {
-  onTranscription: (text: string) => void;
+  onResult: (text: string) => void;
+  placeholder?: string;
+  className?: string;
 }
 
-const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription }) => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+const VoiceInput: React.FC<VoiceInputProps> = ({
+  onResult,
+  placeholder = "Clique para falar...",
+  className = ""
+}) => {
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if browser supports SpeechRecognition
-    const hasSpeechRecognition = 'SpeechRecognition' in window;
-    const hasWebkitSpeechRecognition = 'webkitSpeechRecognition' in window;
+    // Setup speech recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
-    if (!hasSpeechRecognition && !hasWebkitSpeechRecognition) {
+    if (SpeechRecognition) {
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = false;
+      recognitionInstance.lang = 'pt-BR';
+      recognitionInstance.interimResults = false;
+      recognitionInstance.maxAlternatives = 1;
+      
+      recognitionInstance.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        onResult(transcript);
+        setIsListening(false);
+      };
+      
+      recognitionInstance.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+        toast({
+          title: "Erro de reconhecimento",
+          description: "Não foi possível reconhecer sua voz. Tente novamente.",
+          variant: "destructive",
+        });
+      };
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+      
+      setRecognition(recognitionInstance);
+    }
+    
+    return () => {
+      if (recognition) {
+        recognition.abort();
+      }
+    };
+  }, [onResult, toast]);
+
+  const toggleListening = () => {
+    if (!recognition) {
       toast({
-        variant: 'destructive',
-        title: 'Recurso não suportado',
-        description: 'Seu navegador não suporta reconhecimento de voz.',
+        title: "Não suportado",
+        description: "Reconhecimento de voz não é suportado no seu navegador.",
+        variant: "destructive",
       });
       return;
     }
-
-    // Initialize SpeechRecognition
-    let SpeechRecognitionAPI: SpeechRecognitionConstructor | undefined;
     
-    if (hasSpeechRecognition) {
-      SpeechRecognitionAPI = window['SpeechRecognition' as keyof Window] as unknown as SpeechRecognitionConstructor;
-    } else if (hasWebkitSpeechRecognition) {
-      SpeechRecognitionAPI = window['webkitSpeechRecognition' as keyof Window] as unknown as SpeechRecognitionConstructor;
-    }
-    
-    if (SpeechRecognitionAPI) {
-      recognitionRef.current = new SpeechRecognitionAPI();
-      
-      if (recognitionRef.current) {
-        recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = true;
-        recognitionRef.current.lang = 'pt-BR';
-        
-        recognitionRef.current.onresult = (event) => {
-          const current = event.resultIndex;
-          const result = event.results[current];
-          
-          const transcriptText = result[0].transcript;
-          setTranscript(transcriptText);
-          
-          if (result.isFinal) {
-            onTranscription(transcriptText);
-          }
-        };
-        
-        recognitionRef.current.onerror = (event) => {
-          console.error('Speech recognition error', event.error);
-          setIsRecording(false);
-          toast({
-            variant: 'destructive',
-            title: 'Erro',
-            description: 'Erro ao reconhecer voz. Tente novamente.',
-          });
-        };
-      }
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, [onTranscription, toast]);
-
-  const toggleRecording = () => {
-    if (!recognitionRef.current) return;
-    
-    if (isRecording) {
-      recognitionRef.current.stop();
-      toast({
-        title: 'Gravação finalizada',
-        description: 'Transcrição concluída com sucesso.',
-      });
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
     } else {
-      setTranscript('');
-      recognitionRef.current.start();
-      toast({
-        title: 'Gravação iniciada',
-        description: 'Fale agora para criar sua missão.',
-      });
+      recognition.start();
+      setIsListening(true);
     }
-    
-    setIsRecording(!isRecording);
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Button
-          type="button"
-          onClick={toggleRecording}
-          variant={isRecording ? "destructive" : "outline"}
-          className="flex gap-2 items-center"
-        >
-          {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          {isRecording ? 'Parar Gravação' : 'Gravar Missão'}
-        </Button>
-        
-        {transcript && (
-          <Button
-            type="button" 
-            variant="ghost" 
-            onClick={() => setTranscript('')}
-            className="text-xs"
-          >
-            Limpar
-          </Button>
-        )}
-      </div>
-      
-      {transcript && (
-        <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
-          <p className="text-sm italic text-purple-700">{transcript}</p>
-        </div>
+    <Button
+      type="button"
+      variant={isListening ? "default" : "outline"}
+      onClick={toggleListening}
+      className={`flex items-center gap-2 ${className}`}
+    >
+      {isListening ? (
+        <>
+          <MicOff className="h-4 w-4" />
+          <span>Pare de falar...</span>
+        </>
+      ) : (
+        <>
+          <Mic className="h-4 w-4" />
+          <span>{placeholder}</span>
+        </>
       )}
-    </div>
+    </Button>
   );
 };
 

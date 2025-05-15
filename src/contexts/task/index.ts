@@ -1,23 +1,18 @@
 
-import { TaskProvider } from './TaskProvider';
-import { useTask } from './useTask';
-import type { 
+import TaskContext, { TaskProvider } from './TaskProvider';
+import useTask from './useTask';
+import type {
   Task, 
   Child, 
   MenstrualCycle,
   TaskCategory,
-  RecurrenceType, 
+  RecurrenceType,
   MenstrualPhase,
   TaskContextType,
-  VoiceSettings 
+  VoiceSettings
 } from './types';
 
-export { 
-  TaskProvider, 
-  useTask
-};
-
-// Re-export types using 'export type'
+export { TaskProvider, useTask, TaskContext };
 export type {
   Task, 
   Child, 

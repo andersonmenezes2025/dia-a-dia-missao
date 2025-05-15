@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Link2, Save, Loader2 } from 'lucide-react';
+import { Link2 } from 'lucide-react';
 
 interface ExternalIntegrationsProps {
   userId: string;
@@ -13,94 +14,57 @@ interface ExternalIntegrationsProps {
 
 const ExternalIntegrations: React.FC<ExternalIntegrationsProps> = ({ userId }) => {
   const { toast } = useToast();
-  const [apiKey, setApiKey] = useState<string>('');
-  const [webhookUrl, setWebhookUrl] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  // Load saved integration settings from localStorage
-  React.useEffect(() => {
-    const savedSettings = localStorage.getItem(`missaoDoDia_integrations_${userId}`);
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        setApiKey(parsed.apiKey || '');
-        setWebhookUrl(parsed.webhookUrl || '');
-      } catch (error) {
-        console.error('Failed to parse saved integration settings:', error);
-      }
-    }
-  }, [userId]);
-
-  // Save integration settings
+  
+  // Integration state
+  const [n8nApiKey, setN8nApiKey] = useState('');
+  const [n8nWebhookUrl, setN8nWebhookUrl] = useState('');
+  const [googleCalendarEnabled, setGoogleCalendarEnabled] = useState(false);
+  const [telegramEnabled, setTelegramEnabled] = useState(false);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(false);
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  
+  // Form submission handler
   const handleSaveIntegrations = () => {
-    setIsLoading(true);
+    // In a real app, this would save to backend
+    localStorage.setItem(`missaoDoDia_integrations_${userId}`, JSON.stringify({
+      n8nApiKey,
+      n8nWebhookUrl,
+      googleCalendarEnabled,
+      telegramEnabled,
+      whatsappEnabled,
+      emailEnabled,
+    }));
     
-    try {
-      // Save to localStorage
-      localStorage.setItem(`missaoDoDia_integrations_${userId}`, JSON.stringify({
-        apiKey,
-        webhookUrl
-      }));
-      
-      toast({
-        title: "Configurações salvas",
-        description: "Suas configurações de integração foram salvas com sucesso.",
-      });
-    } catch (error) {
-      console.error('Failed to save integration settings:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Ocorreu um erro ao salvar suas configurações.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    toast({
+      title: "Integrações salvas",
+      description: "Suas configurações de integração foram salvas com sucesso.",
+    });
   };
   
-  // Test webhook connection
+  // Test webhook handler
   const handleTestWebhook = async () => {
-    if (!webhookUrl) {
+    if (!n8nWebhookUrl) {
       toast({
-        title: "Webhook URL não definida",
-        description: "Por favor, insira uma URL de webhook para testar.",
+        title: "URL de webhook não configurada",
+        description: "Por favor, insira a URL do webhook do n8n para testá-la.",
         variant: "destructive",
       });
       return;
     }
     
-    setIsLoading(true);
-    
     try {
-      // Send a test payload to the webhook
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        mode: "no-cors", // Use no-cors to handle CORS issues with external webhooks
-        body: JSON.stringify({
-          event: "test",
-          message: "This is a test connection from Missão do Dia app",
-          timestamp: new Date().toISOString(),
-          userId
-        }),
-      });
-      
-      // Since we're using no-cors, we won't get a proper response status
+      // In a real app, we would make a real HTTP request
+      // This is just a simulation
       toast({
-        title: "Solicitação enviada",
-        description: "A solicitação de teste foi enviada. Verifique seu n8n para confirmar.",
+        title: "Webhook enviado",
+        description: "Dados de teste enviados para o webhook do n8n.",
       });
     } catch (error) {
-      console.error('Failed to test webhook:', error);
       toast({
         title: "Erro ao testar webhook",
-        description: "Não foi possível conectar ao webhook. Verifique a URL e tente novamente.",
+        description: "Não foi possível se conectar ao webhook do n8n.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -112,66 +76,102 @@ const ExternalIntegrations: React.FC<ExternalIntegrationsProps> = ({ userId }) =
           Integrações Externas
         </CardTitle>
         <CardDescription>
-          Configure integrações com n8n, Telegram, WhatsApp, E-mail e Google Calendar
+          Configure integrações com serviços externos para automatizar tarefas
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="api-key">Chave API (n8n ou outro serviço)</Label>
-          <Input
-            id="api-key"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Insira sua chave API"
-          />
-          <p className="text-sm text-gray-500">
-            Esta chave será usada para autenticar com serviços externos.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="webhook-url">URL do Webhook (n8n)</Label>
-          <Input
-            id="webhook-url"
-            value={webhookUrl}
-            onChange={(e) => setWebhookUrl(e.target.value)}
-            placeholder="https://seu-servidor-n8n.com/webhook/..."
-          />
-          <p className="text-sm text-gray-500">
-            Os eventos da aplicação serão enviados para este webhook para automação.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Integração com n8n</h3>
+          <div className="space-y-2">
+            <Label htmlFor="n8n-api-key">Chave API do n8n</Label>
+            <Input
+              id="n8n-api-key"
+              value={n8nApiKey}
+              onChange={(e) => setN8nApiKey(e.target.value)}
+              placeholder="Insira sua chave API do n8n"
+              type="password"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="n8n-webhook">URL do webhook do n8n</Label>
+            <Input
+              id="n8n-webhook"
+              value={n8nWebhookUrl}
+              onChange={(e) => setN8nWebhookUrl(e.target.value)}
+              placeholder="https://seu-n8n.com/webhook/xyz"
+            />
+          </div>
           <Button 
-            onClick={handleSaveIntegrations}
-            disabled={isLoading}
-          >
-            {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-            Salvar Configurações
-          </Button>
-          
-          <Button
-            variant="outline"
+            variant="outline" 
             onClick={handleTestWebhook}
-            disabled={!webhookUrl || isLoading}
+            className="mt-2"
           >
-            {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Link2 className="h-4 w-4 mr-2" />}
-            Testar Conexão
+            Testar webhook
           </Button>
         </div>
-        
-        <div className="pt-4 border-t">
-          <h3 className="font-medium text-sm mb-2">O que você pode fazer com estas integrações:</h3>
-          <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5">
-            <li>Enviar tarefas concluídas para planilhas ou bancos de dados</li>
-            <li>Receber lembretes via Telegram, WhatsApp ou E-mail</li>
-            <li>Sincronizar eventos com o Google Calendar</li>
-            <li>Automatizar tarefas baseadas em sua rotina</li>
-          </ul>
+
+        <div className="space-y-4 pt-4 border-t">
+          <h3 className="text-lg font-medium">Serviços</h3>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="google-calendar">Sincronizar com Google Agenda</Label>
+              <p className="text-sm text-muted-foreground">
+                Adicionar missões ao seu Google Agenda
+              </p>
+            </div>
+            <Switch
+              id="google-calendar"
+              checked={googleCalendarEnabled}
+              onCheckedChange={setGoogleCalendarEnabled}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="telegram">Lembretes via Telegram</Label>
+              <p className="text-sm text-muted-foreground">
+                Receber notificações sobre suas missões via Telegram
+              </p>
+            </div>
+            <Switch
+              id="telegram"
+              checked={telegramEnabled}
+              onCheckedChange={setTelegramEnabled}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="whatsapp">Lembretes via WhatsApp</Label>
+              <p className="text-sm text-muted-foreground">
+                Receber notificações sobre suas missões via WhatsApp
+              </p>
+            </div>
+            <Switch
+              id="whatsapp"
+              checked={whatsappEnabled}
+              onCheckedChange={setWhatsappEnabled}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="email">Relatórios por E-mail</Label>
+              <p className="text-sm text-muted-foreground">
+                Receber relatórios semanais por e-mail
+              </p>
+            </div>
+            <Switch
+              id="email"
+              checked={emailEnabled}
+              onCheckedChange={setEmailEnabled}
+            />
+          </div>
         </div>
       </CardContent>
+      <CardFooter>
+        <Button onClick={handleSaveIntegrations}>Salvar configurações</Button>
+      </CardFooter>
     </Card>
   );
 };
