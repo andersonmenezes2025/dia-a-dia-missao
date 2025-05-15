@@ -5,11 +5,11 @@ import Layout from '@/components/Layout';
 import { useTask } from '@/contexts/TaskContext';
 import TaskCard from '@/components/TaskCard';
 import PomodoroTimer from '@/components/PomodoroTimer';
+import MedalProgress from '@/components/MedalProgress';
 import { Input } from "@/components/ui/input";
 import { Button } from '@/components/ui/button';
 import { Search, Plus, Clock, ArrowLeft } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import VoiceReminderSettings from '@/components/VoiceReminderSettings';
 import { useToast } from '@/hooks/use-toast';
@@ -61,15 +61,6 @@ const ChildMissions = () => {
     setShowPomodoro(true);
   };
 
-  const getMedalRequirementsText = (medalType: string) => {
-    switch(medalType) {
-      case 'bronze': return 'Complete 5 tarefas para ganhar uma medalha de bronze';
-      case 'silver': return 'Complete 10 tarefas para ganhar uma medalha de prata';
-      case 'gold': return 'Complete 15 tarefas para ganhar uma medalha de ouro';
-      default: return '';
-    }
-  };
-
   if (!currentChild) return null;
 
   return (
@@ -106,27 +97,18 @@ const ChildMissions = () => {
               <div className="space-y-1 mb-4">
                 <p className="text-sm font-medium">Pontos acumulados: <span className="font-bold text-purple-600">{currentChild.points}</span></p>
               </div>
-
-              <div className="space-y-2 border-t pt-4">
-                <h4 className="font-medium text-sm">Requisitos para Medalhas:</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-amber-700">Bronze</Badge>
-                    <span>{getMedalRequirementsText('bronze')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-gray-400">Prata</Badge>
-                    <span>{getMedalRequirementsText('silver')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-yellow-400">Ouro</Badge>
-                    <span>{getMedalRequirementsText('gold')}</span>
-                  </div>
-                </div>
-              </div>
             </Card>
 
-            <VoiceReminderSettings />
+            {/* Medal Progress Component */}
+            <MedalProgress 
+              completedTasks={completedTasks.length}
+              childMode={true}
+              childId={childId}
+            />
+
+            <div className="mt-6">
+              <VoiceReminderSettings />
+            </div>
           </div>
 
           {/* Center column - Task list */}

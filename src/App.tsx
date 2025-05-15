@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { TaskProvider } from "./contexts/TaskContext";
 import { lazy, Suspense } from "react";
-import { ptBR } from 'date-fns/locale'; // Import Portuguese locale
 
 // Páginas
 const Login = lazy(() => import("./pages/Login"));
@@ -20,6 +19,7 @@ const ChildrenProfile = lazy(() => import("./pages/ChildrenProfile"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Missions = lazy(() => import("./pages/Missions"));
 const ChildMissions = lazy(() => import("./pages/ChildMissions"));
+const HealthInfo = lazy(() => import("./pages/HealthInfo"));
 import NotFound from "./pages/NotFound";
 import PrivateRoute from "./components/PrivateRoute";
 import LoadingScreen from "./components/LoadingScreen";
@@ -46,6 +46,7 @@ const App = () => (
                 <Route path="/relatorios" element={<PrivateRoute><Reports /></PrivateRoute>} />
                 <Route path="/missoes" element={<PrivateRoute><Missions /></PrivateRoute>} />
                 <Route path="/missoes-filho/:childId" element={<PrivateRoute><ChildMissions /></PrivateRoute>} />
+                <Route path="/saude" element={<PrivateRoute><HealthInfo /></PrivateRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

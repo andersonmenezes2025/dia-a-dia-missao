@@ -1,173 +1,404 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, Medal, Star, User } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { useTask } from '@/contexts/TaskContext';
+import VoiceReminderSettings from '@/components/VoiceReminderSettings';
+import ExternalIntegrations from '@/components/ExternalIntegrations';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { User, Settings, Bell, Calendar as CalendarIcon, Link2 } from 'lucide-react';
+import { format, addDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
 
-const Profile: React.FC = () => {
-  const { currentUser } = useAuth();
+const Profile = () => {
+  const { currentUser, updateUserProfile } = useAuth();
+  const { menstrualCycle, updateMenstrualCycle } = useTask();
+  const { toast } = useToast();
 
-  if (!currentUser) {
-    return null;
-  }
+  // User profile state
+  const [name, setName] = useState(currentUser?.name || '');
+  const [age, setAge] = useState(currentUser?.age?.toString() || '');
+  const [gender, setGender] = useState<'male' | 'female' | 'other'>(currentUser?.gender || 'other');
+  const [biologicalSex, setBiologicalSex] = useState<'male' | 'female'>(
+    currentUser?.biologicalSex || gender === 'female' ? 'female' : 'male'
+  );
+  const [darkMode, setDarkMode] = useState(currentUser?.preferences?.darkMode || false);
+  const [highContrast, setHighContrast] = useState(currentUser?.preferences?.highContrast || false);
+  const [largeText, setLargeText] = useState(currentUser?.preferences?.largeText || false);
 
-  const calculateNextLevelProgress = () => {
-    const currentPoints = currentUser.points || 0;
-    return (currentPoints % 100);
+  // Menstrual cycle state
+  const [cycleStart, setCycleStart] = useState<Date | undefined>(
+    menstrualCycle.cycleStart ? new Date(menstrualCycle.cycleStart) : undefined
+  );
+  const [lastPeriod, setLastPeriod] = useState<Date | undefined>(
+    menstrualCycle.lastPeriod ? new Date(menstrualCycle.lastPeriod) : undefined
+  );
+  const [cycleLength, setCycleLength] = useState(menstrualCycle.cycleLength?.toString() || '28');
+  const [periodLength, setPeriodLength] = useState(menstrualCycle.periodLength?.toString() || '5');
+
+  // Update profile handler
+  const handleUpdateProfile = () => {
+    if (!name) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, insira seu nome.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const ageNum = age ? parseInt(age) : undefined;
+    if (age && (isNaN(ageNum!) || ageNum! <= 0)) {
+      toast({
+        title: "Idade inválida",
+        description: "Por favor, insira uma idade válida.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateUserProfile({
+      name,
+      age: ageNum,
+      gender,
+      biologicalSex,
+      preferences: {
+        darkMode,
+        highContrast,
+        largeText
+      }
+    });
+
+    toast({
+      title: "Perfil atualizado",
+      description: "Suas informações foram atualizadas com sucesso.",
+    });
   };
 
-  const calculateTotalMedals = () => {
-    if (!currentUser.medals) return 0;
-    return currentUser.medals.bronze + currentUser.medals.silver + currentUser.medals.gold;
+  // Update menstrual cycle handler
+  const handleUpdateCycle = () => {
+    if (biologicalSex !== 'female') {
+      return;
+    }
+
+    const cycleLengthNum = parseInt(cycleLength);
+    const periodLengthNum = parseInt(periodLength);
+
+    if (isNaN(cycleLengthNum) || cycleLengthNum < 20 || cycleLengthNum > 45) {
+      toast({
+        title: "Duração de ciclo inválida",
+        description: "A duração do ciclo deve ser entre 20 e 45 dias.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isNaN(periodLengthNum) || periodLengthNum < 1 || periodLengthNum > 10) {
+      toast({
+        title: "Duração de período inválida",
+        description: "A duração do período deve ser entre 1 e 10 dias.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateMenstrualCycle({
+      cycleStart,
+      lastPeriod,
+      cycleLength: cycleLengthNum,
+      periodLength: periodLengthNum,
+      // Keep current phase if already set, otherwise default to none
+      currentPhase: menstrualCycle.currentPhase || 'none'
+    });
+
+    toast({
+      title: "Ciclo atualizado",
+      description: "Suas informações de ciclo foram atualizadas com sucesso.",
+    });
   };
 
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Seu Perfil</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {/* Perfil Básico */}
-          <Card className="md:col-span-1">
-            <CardHeader className="flex flex-col items-center pb-2">
-              <div className="w-24 h-24 rounded-full bg-purple-500 flex items-center justify-center mb-4">
-                <User className="h-12 w-12 text-white" />
-              </div>
-              <CardTitle>{currentUser.name}</CardTitle>
-              <p className="text-sm text-muted-foreground">{currentUser.email}</p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Nível de Missões</p>
-                  <p className="text-2xl font-bold text-purple-600">{currentUser.level}</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Meu Perfil</h1>
+
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span className="hidden md:inline">Perfil</span>
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              <span className="hidden md:inline">Preferências</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              <span className="hidden md:inline">Notificações</span>
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="flex items-center gap-2">
+              <Link2 className="h-4 w-4" />
+              <span className="hidden md:inline">Integrações</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-purple-500" />
+                  Informações Pessoais
+                </CardTitle>
+                <CardDescription>
+                  Atualize suas informações pessoais e preferências
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome completo</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Seu nome completo"
+                  />
                 </div>
-                
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Total de Medalhas</p>
-                  <p className="text-2xl font-bold text-amber-500">{calculateTotalMedals()}</p>
+                <div className="space-y-2">
+                  <Label htmlFor="age">Idade</Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    placeholder="Sua idade"
+                    min="1"
+                  />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Estatísticas */}
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Star className="mr-2 h-5 w-5" /> Progresso
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <div className="flex justify-between mb-1">
-                  <p className="text-sm font-medium">Próximo Nível</p>
-                  <p className="text-sm">{calculateNextLevelProgress()}/100</p>
-                </div>
-                <Progress value={calculateNextLevelProgress()} className="h-2" />
-              </div>
-              
-              <div>
-                <p className="text-sm font-medium mb-3">Medalhas Conquistadas</p>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-full bg-amber-200 flex items-center justify-center mb-1">
-                      <Medal className="h-6 w-6 text-amber-800" />
+                <div className="space-y-2">
+                  <Label>Gênero</Label>
+                  <RadioGroup value={gender} onValueChange={(value) => setGender(value as 'male' | 'female' | 'other')}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="male" id="gender-male" />
+                      <Label htmlFor="gender-male">Masculino</Label>
                     </div>
-                    <p className="text-xs text-muted-foreground">Bronze</p>
-                    <p className="font-bold">{currentUser.medals?.bronze || 0}</p>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center mb-1">
-                      <Medal className="h-6 w-6 text-gray-700" />
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="female" id="gender-female" />
+                      <Label htmlFor="gender-female">Feminino</Label>
                     </div>
-                    <p className="text-xs text-muted-foreground">Prata</p>
-                    <p className="font-bold">{currentUser.medals?.silver || 0}</p>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-full bg-yellow-300 flex items-center justify-center mb-1">
-                      <Medal className="h-6 w-6 text-yellow-800" />
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="other" id="gender-other" />
+                      <Label htmlFor="gender-other">Outro / Prefiro não informar</Label>
                     </div>
-                    <p className="text-xs text-muted-foreground">Ouro</p>
-                    <p className="font-bold">{currentUser.medals?.gold || 0}</p>
-                  </div>
+                  </RadioGroup>
                 </div>
-              </div>
-              
-              <div>
-                <p className="text-sm font-medium mb-2">Dados de Jogador</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <p className="text-xs text-muted-foreground">Total de Pontos</p>
-                    <p className="text-lg font-bold">{currentUser.points || 0}</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <p className="text-xs text-muted-foreground">Conquistas</p>
-                    <p className="text-lg font-bold">{calculateTotalMedals()}</p>
-                  </div>
+                <div className="space-y-2">
+                  <Label>Sexo Biológico (para funcionalidades de saúde)</Label>
+                  <RadioGroup value={biologicalSex} onValueChange={(value) => setBiologicalSex(value as 'male' | 'female')}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="male" id="sex-male" />
+                      <Label htmlFor="sex-male">Masculino</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="female" id="sex-female" />
+                      <Label htmlFor="sex-female">Feminino</Label>
+                    </div>
+                  </RadioGroup>
+                  <p className="text-sm text-gray-500">
+                    Esta informação é usada para funcionalidades específicas de saúde, como ciclo menstrual.
+                  </p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Conquistas */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Award className="mr-2 h-5 w-5" /> Níveis e Recompensas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">Acompanhe seu progresso e desbloqueie novas recompensas ao subir de nível!</p>
-              
-              <div className="space-y-6">
-                <div className="flex items-center">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${currentUser.level >= 1 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                    1
+              </CardContent>
+              <CardFooter>
+                <Button onClick={handleUpdateProfile}>Salvar alterações</Button>
+              </CardFooter>
+            </Card>
+
+            {biologicalSex === 'female' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarIcon className="h-5 w-5 text-purple-500" />
+                    Ciclo Menstrual
+                  </CardTitle>
+                  <CardDescription>
+                    Configure seu ciclo para acompanhamento e lembretes
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Data do início do último período</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {lastPeriod
+                              ? format(lastPeriod, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                              : "Selecione uma data"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={lastPeriod}
+                            onSelect={setLastPeriod}
+                            initialFocus
+                            disabled={(date) => date > new Date() || date < addDays(new Date(), -90)}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Início do ciclo atual (se diferente)</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {cycleStart
+                              ? format(cycleStart, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                              : "Selecione uma data"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={cycleStart}
+                            onSelect={setCycleStart}
+                            initialFocus
+                            disabled={(date) => date > new Date() || date < addDays(new Date(), -90)}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className={`font-medium ${currentUser.level >= 1 ? 'text-purple-800' : 'text-gray-400'}`}>Iniciante</h3>
-                    <p className="text-sm text-muted-foreground">Começou sua jornada com o Missão do Dia</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cycle-length">Duração do ciclo (dias)</Label>
+                      <Input
+                        id="cycle-length"
+                        type="number"
+                        value={cycleLength}
+                        onChange={(e) => setCycleLength(e.target.value)}
+                        placeholder="28"
+                        min="20"
+                        max="45"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Normalmente entre 21 e 35 dias
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="period-length">Duração do período (dias)</Label>
+                      <Input
+                        id="period-length"
+                        type="number"
+                        value={periodLength}
+                        onChange={(e) => setPeriodLength(e.target.value)}
+                        placeholder="5"
+                        min="1"
+                        max="10"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Normalmente entre 3 e 7 dias
+                      </p>
+                    </div>
                   </div>
+                </CardContent>
+                <CardFooter>
+                  <Button onClick={handleUpdateCycle}>Salvar configurações do ciclo</Button>
+                </CardFooter>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Preferences Tab */}
+          <TabsContent value="preferences" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-purple-500" />
+                  Preferências de Acessibilidade
+                </CardTitle>
+                <CardDescription>
+                  Ajuste a interface para melhorar sua experiência
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="dark-mode">Modo Escuro</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Ative para reduzir o cansaço visual em ambientes escuros
+                    </p>
+                  </div>
+                  <Switch
+                    id="dark-mode"
+                    checked={darkMode}
+                    onCheckedChange={setDarkMode}
+                  />
                 </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${currentUser.level >= 5 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                    5
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="high-contrast">Alto Contraste</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Melhora a visibilidade dos elementos na tela
+                    </p>
                   </div>
-                  <div>
-                    <h3 className={`font-medium ${currentUser.level >= 5 ? 'text-purple-800' : 'text-gray-400'}`}>Organizado</h3>
-                    <p className="text-sm text-muted-foreground">Completou várias missões e está no caminho certo</p>
-                  </div>
+                  <Switch
+                    id="high-contrast"
+                    checked={highContrast}
+                    onCheckedChange={setHighContrast}
+                  />
                 </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${currentUser.level >= 10 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                    10
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="large-text">Texto Grande</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Aumenta o tamanho dos textos para facilitar a leitura
+                    </p>
                   </div>
-                  <div>
-                    <h3 className={`font-medium ${currentUser.level >= 10 ? 'text-purple-800' : 'text-gray-400'}`}>Gerenciador de Tarefas</h3>
-                    <p className="text-sm text-muted-foreground">Especialista em concluir missões complexas</p>
-                  </div>
+                  <Switch
+                    id="large-text"
+                    checked={largeText}
+                    onCheckedChange={setLargeText}
+                  />
                 </div>
-                
-                <div className="flex items-center">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${currentUser.level >= 20 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                    20
-                  </div>
-                  <div>
-                    <h3 className={`font-medium ${currentUser.level >= 20 ? 'text-purple-800' : 'text-gray-400'}`}>Mestre das Missões</h3>
-                    <p className="text-sm text-muted-foreground">Desbloqueou todos os recursos e se tornou um mestre da produtividade</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={handleUpdateProfile}>Salvar preferências</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-6">
+            <VoiceReminderSettings />
+          </TabsContent>
+
+          {/* Integrations Tab */}
+          <TabsContent value="integrations" className="space-y-6">
+            {currentUser && <ExternalIntegrations userId={currentUser.id} />}
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
