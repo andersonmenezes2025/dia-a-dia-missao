@@ -18,6 +18,7 @@ const EditTask = lazy(() => import("./pages/EditTask"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ChildrenProfile = lazy(() => import("./pages/ChildrenProfile"));
 const Reports = lazy(() => import("./pages/Reports"));
+const Missions = lazy(() => import("./pages/Missions"));
 import NotFound from "./pages/NotFound";
 import PrivateRoute from "./components/PrivateRoute";
 import LoadingScreen from "./components/LoadingScreen";
@@ -42,6 +43,7 @@ const App = () => (
                 <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
                 <Route path="/filhos" element={<PrivateRoute><ChildrenProfile /></PrivateRoute>} />
                 <Route path="/relatorios" element={<PrivateRoute><Reports /></PrivateRoute>} />
+                <Route path="/missoes" element={<PrivateRoute><Missions /></PrivateRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
