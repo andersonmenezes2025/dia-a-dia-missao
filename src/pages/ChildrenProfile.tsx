@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { useTask } from '@/contexts/TaskContext';
@@ -7,13 +8,15 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Users, Trash2, Star, Calendar } from 'lucide-react';
+import { Plus, Users, Trash2, Star, Calendar, List } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import TaskCard from '@/components/TaskCard';
+import { useNavigate } from 'react-router-dom';
 
 const ChildrenProfile: React.FC = () => {
   const { childrenList, tasks, addChild, updateChild, deleteChild } = useTask();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const [isAddingChild, setIsAddingChild] = useState(false);
   const [newChildName, setNewChildName] = useState('');
@@ -149,14 +152,25 @@ const ChildrenProfile: React.FC = () => {
                         <p className="text-sm text-muted-foreground">{child.age} anos</p>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteChild(child.id, child.name)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/missoes-filho/${child.id}`)}
+                        className="flex items-center gap-1"
+                      >
+                        <List className="h-4 w-4" /> 
+                        Missões
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteChild(child.id, child.name)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -171,7 +185,25 @@ const ChildrenProfile: React.FC = () => {
                     </div>
                   </div>
                   
-                  <Tabs defaultValue="active">
+                  <div className="border p-3 rounded-md bg-gray-50">
+                    <h4 className="text-sm font-medium mb-2">Requisitos para Medalhas:</h4>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="flex flex-col items-center">
+                        <div className="w-8 h-8 bg-amber-700 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">B</div>
+                        <span className="text-xs mt-1">5 tarefas</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">P</div>
+                        <span className="text-xs mt-1">10 tarefas</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">O</div>
+                        <span className="text-xs mt-1">15 tarefas</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Tabs defaultValue="active" className="mt-4">
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="active">Missões Ativas</TabsTrigger>
                       <TabsTrigger value="completed">Missões Concluídas</TabsTrigger>

@@ -17,6 +17,11 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [menstrualCycle, setMenstrualCycle] = useState<MenstrualCycle>({
     currentPhase: 'none'
   });
+  const [voiceSettings, setVoiceSettings] = useState({
+    enabled: true,
+    volume: 80,
+    voiceType: 'female'
+  });
   const { currentUser } = useAuth();
 
   // Load tasks from localStorage
@@ -25,6 +30,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedTasks = localStorage.getItem(`missaoDoDia_tasks_${currentUser.id}`);
       const storedChildren = localStorage.getItem(`missaoDoDia_children_${currentUser.id}`);
       const storedMenstrualCycle = localStorage.getItem(`missaoDoDia_menstrualCycle_${currentUser.id}`);
+      const storedVoiceSettings = localStorage.getItem(`missaoDoDia_voiceSettings_${currentUser.id}`);
       
       if (storedTasks) {
         const parsedTasks = JSON.parse(storedTasks);
@@ -49,10 +55,19 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastPeriod: parsedCycle.lastPeriod ? new Date(parsedCycle.lastPeriod) : undefined
         });
       }
+      
+      if (storedVoiceSettings) {
+        setVoiceSettings(JSON.parse(storedVoiceSettings));
+      }
     } else {
       setTasks([]);
       setChildrenList([]);
       setMenstrualCycle({ currentPhase: 'none' });
+      setVoiceSettings({
+        enabled: true,
+        volume: 80,
+        voiceType: 'female'
+      });
     }
   }, [currentUser]);
 
@@ -76,6 +91,13 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem(`missaoDoDia_menstrualCycle_${currentUser.id}`, JSON.stringify(menstrualCycle));
     }
   }, [menstrualCycle, currentUser]);
+  
+  // Save voice settings when they change
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`missaoDoDia_voiceSettings_${currentUser.id}`, JSON.stringify(voiceSettings));
+    }
+  }, [voiceSettings, currentUser]);
 
   // Check for reminders every minute
   useEffect(() => {
@@ -99,16 +121,45 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       });
       
-      if (upcomingTasks.length > 0) {
-        // We could trigger an alert here, but we'll let the dashboard component handle it
-        console.log('Tasks with upcoming reminders:', upcomingTasks);
+      if (upcomingTasks.length > 0 && voiceSettings.enabled) {
+        // Play voice reminder for the first upcoming task
+        const task = upcomingTasks[0];
+        
+        // Use Web Speech API for voice announcement
+        if ('speechSynthesis' in window) {
+          const announcement = `Atenção! A Missão ${task.title} começa em 15 minutos.`;
+          
+          const utterance = new SpeechSynthesisUtterance(announcement);
+          utterance.lang = 'pt-BR';
+          utterance.volume = voiceSettings.volume / 100;
+          
+          // Try to find an appropriate voice
+          const voices = speechSynthesis.getVoices();
+          const brVoices = voices.filter(v => v.lang.includes('pt-BR'));
+          
+          if (brVoices.length > 0) {
+            // Look for a voice matching the selected gender
+            const genderVoices = voiceSettings.voiceType === 'female' 
+              ? brVoices.filter(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman'))
+              : brVoices.filter(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('man'));
+            
+            if (genderVoices.length > 0) {
+              utterance.voice = genderVoices[0];
+            } else {
+              // Fall back to any Portuguese voice
+              utterance.voice = brVoices[0];
+            }
+          }
+          
+          speechSynthesis.speak(utterance);
+        }
       }
     };
     
     const intervalId = setInterval(checkReminders, 60000); // Check every minute
     
     return () => clearInterval(intervalId);
-  }, [tasks]);
+  }, [tasks, voiceSettings]);
 
   // Task operations
   const addTask = (task: Omit<Task, 'id' | 'userId' | 'createdAt' | 'completed'>) => {
@@ -160,11 +211,26 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (task.childAssigned && task.childId) {
       const childIds = Array.isArray(task.childId) ? task.childId : [task.childId];
       
-      setChildrenList(childrenList.map(child => 
-        childIds.includes(child.id) 
-          ? { ...child, points: child.points + task.points } 
-          : child
-      ));
+      setChildrenList(childrenList.map(child => {
+        if (childIds.includes(child.id)) {
+          const newPoints = child.points + task.points;
+          
+          // Check if child earned a medal based on completed tasks count
+          const completedTasksCount = tasks.filter(t => 
+            t.completed && 
+            t.childAssigned && 
+            ((typeof t.childId === 'string' && t.childId === child.id) ||
+             (Array.isArray(t.childId) && t.childId.includes(child.id)))
+          ).length + 1; // +1 for the current task
+          
+          return { 
+            ...child, 
+            points: newPoints,
+            // Track medals in child object if needed
+          };
+        }
+        return child;
+      }));
     }
   };
 
@@ -235,6 +301,21 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateMenstrualCycle = (cycle: Partial<MenstrualCycle>) => {
     setMenstrualCycle(prev => ({ ...prev, ...cycle }));
   };
+  
+  // Voice settings management
+  const updateVoiceSettings = (settings: Partial<typeof voiceSettings>) => {
+    setVoiceSettings(prev => ({ ...prev, ...settings }));
+  };
+
+  // Medal requirements
+  const getMedalRequirements = (medalType: 'bronze' | 'silver' | 'gold') => {
+    switch(medalType) {
+      case 'bronze': return 5;  // 5 completed tasks for bronze
+      case 'silver': return 10; // 10 completed tasks for silver
+      case 'gold': return 15;   // 15 completed tasks for gold
+      default: return 0;
+    }
+  };
 
   // Reminders
   const getUpcomingReminders = () => {
@@ -255,11 +336,19 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     });
   };
+  
+  // Start Pomodoro for a task
+  const startPomodoroForTask = (taskId: string) => {
+    // Set task to "in progress" state if needed
+    console.log(`Starting pomodoro for task ${taskId}`);
+    // This could be expanded with additional functionality
+  };
 
   const value = {
     tasks,
     childrenList,
     menstrualCycle,
+    voiceSettings,
     addTask,
     updateTask,
     deleteTask,
@@ -271,7 +360,10 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getWeeklyProgressData,
     getMotivationalPhrase,
     updateMenstrualCycle,
-    getUpcomingReminders
+    updateVoiceSettings,
+    getMedalRequirements,
+    getUpcomingReminders,
+    startPomodoroForTask
   };
 
   return (
