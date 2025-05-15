@@ -34,8 +34,6 @@ const MotivationalAlert: React.FC<MotivationalAlertProps> = ({
       
       if (isReminder && taskTitle) {
         phrase = `Lembrete: "${taskTitle}" começa em breve!\n\n${phrase}\n\nLembre-se que seu trabalho é importante e sua família te ama muito!`;
-      } else {
-        phrase = `${phrase}\n\nSeu trabalho faz diferença e seus entes queridos valorizam seu esforço!`;
       }
       
       setQuote(phrase);
