@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
+import { useSpeech } from '@/hooks/use-speech';
 
 interface VoiceInputProps {
   onResult: (text: string) => void;
@@ -18,6 +19,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
   const { toast } = useToast();
+  const { isSupported } = useSpeech();
 
   useEffect(() => {
     // Setup speech recognition

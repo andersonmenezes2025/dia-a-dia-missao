@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useTask } from "../contexts/task";
 import Layout from "../components/Layout";
-import TaskCard from "../components/TaskCard";
+import EnhancedTaskCard from "../components/EnhancedTaskCard";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,7 +56,7 @@ const Missions = () => {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {activeTasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
+                  <EnhancedTaskCard key={task.id} task={task} />
                 ))}
               </div>
             )}
@@ -72,7 +72,7 @@ const Missions = () => {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {completedTasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
+                  <EnhancedTaskCard key={task.id} task={task} />
                 ))}
               </div>
             )}

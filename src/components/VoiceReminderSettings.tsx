@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useTask } from '@/contexts/TaskContext';
+import { useTask } from '@/contexts/task';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -8,11 +8,16 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Bell } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
+import { useSpeech } from '@/hooks/use-speech';
 
 const VoiceReminderSettings: React.FC = () => {
   const { voiceSettings, updateVoiceSettings } = useTask();
   const { toast } = useToast();
+  const { speak, isSupported } = useSpeech({ 
+    voiceType: voiceSettings.voiceType, 
+    volume: voiceSettings.volume 
+  });
   
   const handleSaveSettings = () => {
     toast({
@@ -23,30 +28,8 @@ const VoiceReminderSettings: React.FC = () => {
   
   // Test voice handler
   const handleTestVoice = () => {
-    if ('speechSynthesis' in window && voiceSettings.enabled) {
-      const utterance = new SpeechSynthesisUtterance("Este é um teste de lembrete por voz. Suas missões serão anunciadas nesta voz.");
-      utterance.lang = 'pt-BR';
-      utterance.volume = voiceSettings.volume / 100;
-      
-      // Try to find an appropriate voice
-      const voices = speechSynthesis.getVoices();
-      const brVoices = voices.filter(v => v.lang.includes('pt-BR'));
-      
-      if (brVoices.length > 0) {
-        // Look for a voice matching the selected gender
-        const genderVoices = voiceSettings.voiceType === 'female' 
-          ? brVoices.filter(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman'))
-          : brVoices.filter(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('man'));
-        
-        if (genderVoices.length > 0) {
-          utterance.voice = genderVoices[0];
-        } else {
-          // Fall back to any Portuguese voice
-          utterance.voice = brVoices[0];
-        }
-      }
-      
-      speechSynthesis.speak(utterance);
+    if (isSupported && voiceSettings.enabled) {
+      speak("Este é um teste de lembrete por voz. Suas missões serão anunciadas nesta voz.");
     } else {
       toast({
         title: "Lembretes por voz desativados",
