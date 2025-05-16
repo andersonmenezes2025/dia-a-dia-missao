@@ -1,6 +1,6 @@
 
 import TaskContext, { TaskProvider } from './TaskProvider';
-import useTask from './useTask';
+import { useTask } from './useTask';
 import type {
   Task, 
   Child, 

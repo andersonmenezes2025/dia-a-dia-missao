@@ -241,7 +241,7 @@ const CreateTask: React.FC = () => {
           <TabsContent value="missao" className="bg-white shadow-md rounded-lg p-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <VoiceInput onTranscription={handleVoiceTranscription} />
+                <VoiceInput onResult={handleVoiceTranscription} />
                 
                 <FormField
                   control={form.control}
