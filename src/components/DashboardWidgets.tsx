@@ -23,8 +23,8 @@ const DashboardWidgets: React.FC<DashboardWidgetsProps> = ({ completedTasksCount
         <MedalProgress completedTasks={completedTasksCount} />
         <MotivationalVoice />
         
-        {/* New TDAH Chat Widget */}
-        <Card className="overflow-hidden border border-purple-100 shadow-md hover:shadow-lg transition-shadow">
+        {/* TDAH Chat Widget */}
+        <Card className="overflow-hidden border border-purple-100 shadow-md hover:shadow-lg transition-shadow animate-fade-in">
           <CardHeader className="bg-gradient-to-r from-purple-100 to-indigo-100 py-4">
             <CardTitle className="flex items-center gap-2 text-purple-800">
               <Brain className="h-5 w-5" />

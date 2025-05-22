@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,6 +5,7 @@ import { useTask, type TaskCategory } from '@/contexts/TaskContext';
 import TaskCard from '@/components/TaskCard';
 import PomodoroTimer from '@/components/PomodoroTimer';
 import MotivationalAlert from '@/components/MotivationalAlert';
+import DashboardWidgets from '@/components/DashboardWidgets';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -98,6 +98,9 @@ const Dashboard: React.FC = () => {
     return 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200';
   };
 
+  // Calculate completed tasks count for the DashboardWidgets component
+  const completedTasksCount = tasks.filter(task => task.completed).length;
+  
   return (
     <Layout>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -260,6 +263,12 @@ const Dashboard: React.FC = () => {
             <PomodoroTimer />
           </div>
         </div>
+      </div>
+      
+      {/* Dashboard Widgets Section - Added for TDAH Chat and other widgets */}
+      <div className="mt-8 animate-fade-in" style={{ animationDelay: "0.5s" }}>
+        <h2 className="text-xl font-bold text-purple-800 mb-5">Ferramentas & Recursos</h2>
+        <DashboardWidgets completedTasksCount={completedTasksCount} />
       </div>
       
       {/* Alerta Motivacional */}
