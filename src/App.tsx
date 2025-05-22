@@ -20,6 +20,7 @@ const Reports = lazy(() => import("./pages/Reports"));
 const Missions = lazy(() => import("./pages/Missions"));
 const ChildMissions = lazy(() => import("./pages/ChildMissions"));
 const HealthInfo = lazy(() => import("./pages/HealthInfo"));
+const TDAHChat = lazy(() => import("./pages/TDAHChat"));
 import NotFound from "./pages/NotFound";
 import PrivateRoute from "./components/PrivateRoute";
 import LoadingScreen from "./components/LoadingScreen";
@@ -47,6 +48,7 @@ const App = () => (
                 <Route path="/missoes" element={<PrivateRoute><Missions /></PrivateRoute>} />
                 <Route path="/missoes-filho/:childId" element={<PrivateRoute><ChildMissions /></PrivateRoute>} />
                 <Route path="/saude" element={<PrivateRoute><HealthInfo /></PrivateRoute>} />
+                <Route path="/chat-tdah" element={<PrivateRoute><TDAHChat /></PrivateRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
