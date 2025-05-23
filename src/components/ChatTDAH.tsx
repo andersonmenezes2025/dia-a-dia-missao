@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,15 +35,22 @@ const ChatTDAH: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Check if the API URL is a localhost URL and we're not running locally
+  // Check if the API URL is configured correctly
   useEffect(() => {
-    if (apiUrl.includes('localhost') && !env.isLocalhost && env.isProduction) {
-      console.warn('Using localhost API URL in production environment. This will likely cause connection issues.');
+    console.log("Current API URL configuration:", apiUrl);
+    console.log("Environment settings:", { 
+      isLocalhost: env.isLocalhost, 
+      isDevelopment: env.isDevelopment,
+      isProduction: env.isProduction
+    });
+    
+    if (!apiUrl) {
+      console.error("API URL is not configured");
       setConnectionError(true);
       
       toast({
         title: "Configuração incorreta",
-        description: "O assistente está configurado para usar uma API local em ambiente de produção.",
+        description: "A URL da API não está configurada corretamente.",
         variant: "destructive",
       });
     }
@@ -73,8 +79,12 @@ const ChatTDAH: React.FC = () => {
     setConnectionError(false);
     
     try {
-      // Send message to n8n webhook using environment variable
-      const response = await fetch(`${apiUrl}/webhook-test/tdah`, {
+      // Ensure we have the correct webhook endpoint URL
+      const webhookEndpoint = `${apiUrl}/webhook-test/tdah`;
+      console.log("Sending message to:", webhookEndpoint);
+      
+      // Send message to n8n webhook
+      const response = await fetch(webhookEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +126,7 @@ const ChatTDAH: React.FC = () => {
         title: "Erro na comunicação",
         description: shouldRetry 
           ? "Tentando reconectar ao assistente..." 
-          : "Não foi possível conectar ao assistente. Tente novamente mais tarde.",
+          : `Não foi possível conectar ao assistente em ${apiUrl}/webhook-test/tdah. Verifique se o serviço está rodando.`,
         variant: "destructive",
       });
       
@@ -125,7 +135,7 @@ const ChatTDAH: React.FC = () => {
         id: (Date.now() + 1).toString(),
         content: shouldRetry
           ? "Estou com dificuldades para processar sua mensagem. Tentando novamente..."
-          : "Desculpe, estou enfrentando dificuldades técnicas no momento. Tente novamente em alguns instantes.",
+          : `Desculpe, estou enfrentando dificuldades técnicas no momento. Verifique se o serviço n8n está rodando em ${apiUrl}/webhook-test/tdah`,
         sender: 'assistant',
         timestamp: new Date(),
       };
@@ -147,7 +157,11 @@ const ChatTDAH: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch(`${apiUrl}/webhook-test/tdah`, {
+      // Ensure we have the correct webhook endpoint URL 
+      const webhookEndpoint = `${apiUrl}/webhook-test/tdah`;
+      console.log("Retrying message to:", webhookEndpoint);
+      
+      const response = await fetch(webhookEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -222,14 +236,16 @@ const ChatTDAH: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 max-h-[60vh] overflow-y-auto">
-        {connectionError && apiUrl.includes('localhost') && !env.isLocalhost && (
+        {connectionError && (
           <Alert variant="destructive" className="mb-4 bg-red-50">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <p className="font-semibold mb-1">Erro de configuração detectado</p>
+              <p className="font-semibold mb-1">Erro de conexão detectado</p>
               <p className="text-sm">
-                O assistente está tentando se conectar a uma API local ({apiUrl}), mas você está acessando de um ambiente remoto.
-                Atualize a variável de ambiente VITE_TDAH_API_URL para apontar para o endereço de produção correto.
+                O assistente está tentando se conectar a {apiUrl}/webhook-test/tdah
+                {env.isLocalhost 
+                  ? ". Verifique se o serviço n8n está rodando localmente na porta 5678."
+                  : ". Verifique se a configuração da API está correta."}
               </p>
             </AlertDescription>
           </Alert>
