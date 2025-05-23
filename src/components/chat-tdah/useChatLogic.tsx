@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import env from '@/config/environment';
@@ -22,14 +21,14 @@ export const useChatLogic = () => {
 
   // Check if the API URL is configured correctly
   useEffect(() => {
-    console.log("Current API URL configuration:", apiUrl);
+    console.log("Current API URL configuration:", env.tdahApiUrl);
     console.log("Environment settings:", { 
       isLocalhost: env.isLocalhost, 
       isDevelopment: env.isDevelopment,
       isProduction: env.isProduction
     });
     
-    if (!apiUrl) {
+    if (!env.tdahApiUrl) {
       console.error("API URL is not configured");
       setConnectionError(true);
       
@@ -39,7 +38,7 @@ export const useChatLogic = () => {
         variant: "destructive",
       });
     }
-  }, [apiUrl, toast]);
+  }, [env.tdahApiUrl, toast]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +60,7 @@ export const useChatLogic = () => {
     
     try {
       // Ensure we have the correct webhook endpoint URL
-      const webhookEndpoint = `${apiUrl}/webhook-test/tdah`;
+      const webhookEndpoint = `${env.tdahApiUrl}/webhook-test/tdah`;
       console.log("Sending message to:", webhookEndpoint);
       
       // Send message to n8n webhook
@@ -107,7 +106,7 @@ export const useChatLogic = () => {
         title: "Erro na comunicação",
         description: shouldRetry 
           ? "Tentando reconectar ao assistente..." 
-          : `Não foi possível conectar ao assistente em ${apiUrl}/webhook-test/tdah. Verifique se o serviço está rodando.`,
+          : `Não foi possível conectar ao assistente em ${env.tdahApiUrl}/webhook-test/tdah. Verifique se o serviço está rodando.`,
         variant: "destructive",
       });
       
@@ -116,7 +115,7 @@ export const useChatLogic = () => {
         id: (Date.now() + 1).toString(),
         content: shouldRetry
           ? "Estou com dificuldades para processar sua mensagem. Tentando novamente..."
-          : `Desculpe, estou enfrentando dificuldades técnicas no momento. Verifique se o serviço n8n está rodando em ${apiUrl}/webhook-test/tdah`,
+          : `Desculpe, estou enfrentando dificuldades técnicas no momento. Verifique se o serviço n8n está rodando em ${env.tdahApiUrl}/webhook-test/tdah`,
         sender: 'assistant',
         timestamp: new Date(),
       };
@@ -139,7 +138,7 @@ export const useChatLogic = () => {
     
     try {
       // Ensure we have the correct webhook endpoint URL 
-      const webhookEndpoint = `${apiUrl}/webhook-test/tdah`;
+      const webhookEndpoint = `${env.tdahApiUrl}/webhook-test/tdah`;
       console.log("Retrying message to:", webhookEndpoint);
       
       const response = await fetch(webhookEndpoint, {
@@ -209,7 +208,7 @@ export const useChatLogic = () => {
     isLoading,
     retryCount,
     connectionError,
-    apiUrl,
+    apiUrl: env.tdahApiUrl,
     handleSendMessage,
     handleRetryMessage,
     handleUpdateApiUrl
