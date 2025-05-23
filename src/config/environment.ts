@@ -16,11 +16,14 @@ interface Environment {
   appVersion: string;
   isDevelopment: boolean;
   isProduction: boolean;
+  
+  // Production flag to help with conditional logic
+  isLocalhost: boolean;
 }
 
 const env: Environment = {
   // API URLs with fallbacks
-  tdahApiUrl: import.meta.env.VITE_TDAH_API_URL || 'http://localhost:5678',
+  tdahApiUrl: import.meta.env.VITE_TDAH_API_URL || 'https://tdah-api.example.com',
   supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'https://qrnkwxdijodfdppfjors.supabase.co',
   supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFybmt3eGRpam9kZmRwcGZqb3JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2MjIzMDIsImV4cCI6MjA2MjE5ODMwMn0.QZW7Im_qxhyf3bOeVVDlSwUidRxCE3IY4aScKZyyx3s',
   
@@ -32,6 +35,9 @@ const env: Environment = {
   appVersion: import.meta.env.VITE_APP_VERSION || '0.1.0',
   isDevelopment: import.meta.env.MODE === 'development',
   isProduction: import.meta.env.MODE === 'production',
+  
+  // Check if we're running on localhost
+  isLocalhost: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
 };
 
 export default env;

@@ -3,9 +3,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SendHorizontal, Bot, User, AlertCircle } from 'lucide-react';
+import { SendHorizontal, Bot, User, AlertCircle, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import env from '@/config/environment';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Message {
   id: string;
@@ -27,12 +28,27 @@ const ChatTDAH: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [connectionError, setConnectionError] = useState(false);
+  const [apiUrl, setApiUrl] = useState(env.tdahApiUrl);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Check if the API URL is a localhost URL and we're not running locally
+  useEffect(() => {
+    if (apiUrl.includes('localhost') && !env.isLocalhost && env.isProduction) {
+      console.warn('Using localhost API URL in production environment. This will likely cause connection issues.');
+      setConnectionError(true);
+      
+      toast({
+        title: "Configuração incorreta",
+        description: "O assistente está configurado para usar uma API local em ambiente de produção.",
+        variant: "destructive",
+      });
+    }
+  }, [apiUrl, toast]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,7 +74,7 @@ const ChatTDAH: React.FC = () => {
     
     try {
       // Send message to n8n webhook using environment variable
-      const response = await fetch(`${env.tdahApiUrl}/webhook-test/tdah`, {
+      const response = await fetch(`${apiUrl}/webhook-test/tdah`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +147,7 @@ const ChatTDAH: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch(`${env.tdahApiUrl}/webhook-test/tdah`, {
+      const response = await fetch(`${apiUrl}/webhook-test/tdah`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,6 +196,16 @@ const ChatTDAH: React.FC = () => {
       setIsLoading(false);
     }
   };
+  
+  // Function to update API URL manually (for local testing)
+  const handleUpdateApiUrl = (newUrl: string) => {
+    setApiUrl(newUrl);
+    localStorage.setItem('tdah_api_url', newUrl);
+    toast({
+      title: "URL da API Atualizada",
+      description: `A URL da API foi atualizada para: ${newUrl}`,
+    });
+  };
 
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-lg border-purple-100">
@@ -196,6 +222,19 @@ const ChatTDAH: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 max-h-[60vh] overflow-y-auto">
+        {connectionError && apiUrl.includes('localhost') && !env.isLocalhost && (
+          <Alert variant="destructive" className="mb-4 bg-red-50">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <p className="font-semibold mb-1">Erro de configuração detectado</p>
+              <p className="text-sm">
+                O assistente está tentando se conectar a uma API local ({apiUrl}), mas você está acessando de um ambiente remoto.
+                Atualize a variável de ambiente VITE_TDAH_API_URL para apontar para o endereço de produção correto.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="space-y-4">
           {messages.map((message) => (
             <div
@@ -248,7 +287,7 @@ const ChatTDAH: React.FC = () => {
           />
           <Button 
             type="submit" 
-            disabled={isLoading || !inputMessage.trim()}
+            disabled={isLoading || !inputMessage.trim() || (connectionError && retryCount >= 2)}
             className="bg-gradient-to-r from-purple-600 to-indigo-600"
           >
             <SendHorizontal className="h-4 w-4 mr-2" />
