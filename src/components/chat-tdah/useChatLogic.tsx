@@ -60,7 +60,7 @@ export const useChatLogic = () => {
     
     try {
       // Ensure we have the correct webhook endpoint URL
-      const webhookEndpoint = `${env.tdahApiUrl}/webhook-test/tdah`;
+      const webhookEndpoint = `${env.tdahApiUrl}/webhook/tdah`;
       console.log("Sending message to:", webhookEndpoint);
       
       // Send message to n8n webhook
